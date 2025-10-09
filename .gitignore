@@ -1,0 +1,152 @@
+# ===========================================
+# 基础：CMake + C++ 项目
+# ===========================================
+
+# 构建输出目录（常见命名）
+build/
+build-*/
+cmake-build-*/
+out/
+bin/
+lib/
+obj/
+tmp/
+temp/
+
+# CMake 生成的临时文件
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CMakeUserPresets.json
+
+# ===========================================
+# IDE / 编辑器
+# ===========================================
+
+# VSCode
+.vscode/
+.vscode-test/
+
+# CLion / JetBrains IDE
+.idea/
+*.iml
+
+# Qt Creator
+*.pro.user
+*.qbs.user
+*.creator.user
+*.creator.user.*
+*.autosave
+
+# Visual Studio
+*.sln
+*.vcxproj*
+*.user
+*.opensdf
+*.sdf
+*.suo
+*.VC.db
+*.VC.opendb
+
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.xcworkspace/
+DerivedData/
+
+# ===========================================
+# 操作系统级别文件
+# ===========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# ===========================================
+# 日志 / 临时文件
+# ===========================================
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.old
+*.orig
+*.rej
+
+# ===========================================
+# 第三方依赖 / 包管理器
+# ===========================================
+
+# Conan
+.conan/
+conanbuildinfo.*
+conaninfo.txt
+
+# vcpkg
+vcpkg_installed/
+vcpkg/
+.vcpkg-root
+
+# Hunter
+_hunter/
+
+# CPM
+.cpm_cache/
+
+# ===========================================
+# 生成的可执行文件 / 库
+# ===========================================
+
+# 通用可执行文件与库
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+*.pdb
+
+# ===========================================
+# 自定义工程文件（根据需要启用）
+# ===========================================
+
+# 忽略导出的配置或缓存文件
+*.json
+*.yaml
+*.yml
+*.ini
+*.cfg
+
+# 忽略自动生成的头文件
+*_autogen/
+*.moc
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# 若你在项目中有资源目录可手动排除：
+# /resources/generated/
+# /data/temp/
