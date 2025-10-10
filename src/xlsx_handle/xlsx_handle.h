@@ -1,8 +1,8 @@
 /**
  * @file xlsx_handle.h
- * @brief XLSX处理类（基于 OpenXLSX）
- * @version 0.1
- * @date 2025-10-09
+ * @brief XLSX处理类（基于 OpenXLSX 0.3.x 兼容版）
+ * @version 1.0
+ * @date 2025-10-10
  * 
  * @copyright Copyright (c) 2025
  * 
@@ -11,43 +11,105 @@
 #include "OpenXLSX.hpp"
 #include <string>
 #include <vector>
+#include <iostream>
+#include <limits>
 
+// 单元格位置结构体（行、列均从 1 开始计数）
+struct CellPos
+{
+    unsigned int row; // 行号
+    unsigned int col; // 列号
+
+    CellPos(unsigned int r = 0, unsigned int c = 0) : row(r), col(c) {}
+
+    bool operator==(const CellPos& other) const
+    {
+        return row == other.row && col == other.col;
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const CellPos& pos)
+{
+    os << "Row:" << pos.row << ", Col:" << pos.col;
+    return os;
+}
 
 class XlsxHandle
 {
 public:
-    XlsxHandle ();
-    ~XlsxHandle ();
+    XlsxHandle();
+    ~XlsxHandle();
 
-    /**
-     * @brief 打开 Excel 文件
-     * @param path 文件路径
-     * @return true 成功
-     * @return false 失败
-     */
-    bool open_file (const std::string &path);
+    // 核心文件操作
+    bool open_file(const std::string& path);        // 打开已有文件
+    bool create_file(const std::string& path);      // 创建新文件
+    bool save_file(const std::string& path = "");   // 保存文件（支持另存为）
+    void close_file();                              // 关闭文件
+    bool is_file_open() const;                      // 判断文件是否已打开
 
-    /**
-     * @brief 关闭 Excel 文件
-     */
-    void close_file ();
+    // 工作表操作
+    std::vector<std::string> get_sheet_names() const;       // 获取所有工作表名称
+    bool is_sheet_exist(const std::string& sheet_name);     // 判断工作表是否存在
 
-    /**
-     * @brief 获取所有工作表名称
-     * @return 工作表名称列表
-     */
-    std::vector<std::string> get_sheet_names () const;
+    // 单元格读写
+    std::string read_cell(const std::string& sheet_name, unsigned int row, unsigned int col);                           // 读单元格
+    bool write_cell(const std::string& sheet_name, unsigned int row, unsigned int col, const std::string& content);     // 写字符串
+    template<typename T> // 模板写（支持 int/double/bool 等基础类型）
+    bool write_cell_value(const std::string& sheet_name, unsigned int row, unsigned int col, const T& value);
 
-    /**
-     * @brief 读取指定工作表中指定单元格内容
-     * @param sheet_name 工作表名
-     * @param row 行号（从 1 开始）
-     * @param col 列号（从 1 开始）
-     * @return 单元格内容
-     */
-    std::string read_cell (const std::string &sheet_name, unsigned int row, unsigned int col);
+    // 单元格查找
+    std::vector<CellPos> find_cell_by_value(const std::string& sheet_name, const std::string& target, bool case_sensitive = true); // 查找值
+
+    // 批量读取
+    std::vector<std::string> read_row(const std::string& sheet_name, unsigned int row); // 读整行
+    std::vector<std::string> read_col(const std::string& sheet_name, unsigned int col); // 读整列
+    std::vector<std::string> read_range(const std::string& sheet_name, unsigned int start_row, 
+                                        unsigned int start_col, unsigned int end_row, unsigned int end_col,
+                                        bool include_empty_cells = false); // 读区域
+
+    // 范围获取
+    bool get_used_range(const std::string& sheet_name, unsigned int& start_row, unsigned int& start_col, unsigned int& end_row, unsigned int& end_col); // 获取已用区域
+    unsigned int get_last_row(const std::string& sheet_name); // 获取最后一行
+    unsigned int get_last_col(const std::string& sheet_name); // 获取最后一列
 
 private:
-    OpenXLSX::XLDocument doc_;
-    bool is_open_;
+    // 辅助函数
+    bool get_worksheet(const std::string& sheet_name, OpenXLSX::XLWorksheet& out_ws); // 获取工作表（输出参数）
+    bool is_cell_empty(const OpenXLSX::XLWorksheet& ws, unsigned int row, unsigned int col); // 判断单元格是否为空
+
+    // 成员变量
+    OpenXLSX::XLDocument doc_;       // OpenXLSX 文档对象
+    bool is_open_;                   // 文件是否已打开
+    bool is_new_file_;               // 是否为新建文件（未保存过）
+    std::string current_file_path_;  // 当前文件路径
 };
+
+template<typename T>
+bool XlsxHandle::write_cell_value(const std::string& sheet_name, unsigned int row, unsigned int col, const T& value)
+{
+    // 1. 检查文件是否打开
+    if (!is_open_)
+    {
+        std::cerr << "[XlsxHandle] Error: Write failed - no file open!" << std::endl;
+        return false;
+    }
+
+    // 2. 获取工作表
+    OpenXLSX::XLWorksheet ws;
+    if (!get_worksheet(sheet_name, ws))
+    {
+        return false;
+    }
+
+    // 3. 写入数据（旧版本通过 value() 赋值）
+    try
+    {
+        ws.cell(row, col).value() = value;
+        return true;
+    }
+    catch (const OpenXLSX::XLException& e)
+    {
+        std::cerr << "[XlsxHandle] Error: Write cell (" << row << "," << col << ") failed - " << e.what() << std::endl;
+        return false;
+    }
+}
