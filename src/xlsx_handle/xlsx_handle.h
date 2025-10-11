@@ -50,6 +50,8 @@ public:
     // 工作表操作
     std::vector<std::string> get_sheet_names() const;       // 获取所有工作表名称
     bool is_sheet_exist(const std::string& sheet_name);     // 判断工作表是否存在
+    bool create_sheet(const std::string& sheet_name);       // 创建新工作表
+    bool delete_sheet(const std::string& sheet_name);       // 删除工作表
 
     // 单元格读写
     std::string read_cell(const std::string& sheet_name, unsigned int row, unsigned int col);                           // 读单元格
@@ -57,7 +59,7 @@ public:
     template<typename T> // 模板写（支持 int/double/bool 等基础类型）
     bool write_cell_value(const std::string& sheet_name, unsigned int row, unsigned int col, const T& value);
 
-    // 单元格查找
+    // 单元格查找（忽略前后空格）
     std::vector<CellPos> find_cell_by_value(const std::string& sheet_name, const std::string& target, bool case_sensitive = true); // 查找值
 
     // 批量读取

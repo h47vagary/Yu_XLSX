@@ -50,7 +50,7 @@ bool XlsxHandle::open_file(const std::string& path)
     }
 }
 
-// 创建新Excel文件（自动添加默认工作表 "Sheet1"）
+// 创建新Excel文件
 bool XlsxHandle::create_file(const std::string& path)
 {
     // 先关闭已打开的文件
@@ -62,9 +62,6 @@ bool XlsxHandle::create_file(const std::string& path)
     try
     {
         doc_.create(path);
-        // 无默认工作表，手动添加
-        doc_.workbook().addWorksheet("Sheet1");
-        
         is_open_ = true;
         is_new_file_ = true;
         current_file_path_ = path;
@@ -171,6 +168,57 @@ bool XlsxHandle::is_sheet_exist(const std::string& sheet_name)
     return get_worksheet(sheet_name, ws);
 }
 
+bool XlsxHandle::create_sheet(const std::string &sheet_name)
+{
+    if (!is_open_)
+    {
+        std::cerr << "[XlsxHandle] Error: Create sheet failed - no file open!" << std::endl;
+        return false;
+    }
+    try
+    {
+        // 若存在则删除
+        delete_sheet(sheet_name);
+
+        doc_.workbook().addWorksheet(sheet_name);
+        std::cout << "[XlsxHandle] Success: Create sheet - " << sheet_name << std::endl;
+        return true;
+    }
+    catch (const OpenXLSX::XLException& e)
+    {
+        std::cerr << "[XlsxHandle] Error: Create sheet failed - " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool XlsxHandle::delete_sheet(const std::string &sheet_name)
+{
+    if (!is_open_)
+    {
+        std::cerr << "[XlsxHandle] Error: Delete sheet failed - no file open!" << std::endl;
+        return false;
+    }
+    try
+    {
+        // 判断是否存在
+        auto names = doc_.workbook().worksheetNames();
+        if (std::find(names.begin(), names.end(), sheet_name) == names.end())
+        {
+            std::cout << "[XlsxHandle] Info: Delete sheet skipped - '" << sheet_name << "' not exist." << std::endl;
+            return true; // 不存在视为成功
+        }
+
+        doc_.workbook().deleteSheet(sheet_name);
+        std::cout << "[XlsxHandle] Success: Delete sheet - " << sheet_name << std::endl;
+        return true;
+    }
+    catch (const OpenXLSX::XLException& e)
+    {
+        std::cerr << "[XlsxHandle] Error: Delete sheet failed - " << e.what() << std::endl;
+        return false;
+    }
+}
+
 // 读取指定单元格内容（返回字符串形式）
 std::string XlsxHandle::read_cell(const std::string& sheet_name, unsigned int row, unsigned int col)
 {
@@ -231,8 +279,20 @@ std::vector<CellPos> XlsxHandle::find_cell_by_value(const std::string& sheet_nam
         return match_positions;
     }
 
-    // 3. 处理大小写（不区分则统一转小写）
+    // 3. 定义忽略前后空格接口
+    auto trim = [](std::string& s)
+    {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }));
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    };
+
+    // 4. 处理大小写（不区分则统一转小写）与去空格
     std::string target_str = target;
+    trim(target_str);
     if (!case_sensitive)
     {
         std::transform(target_str.begin(), target_str.end(), target_str.begin(), [](unsigned char c) {
@@ -240,7 +300,7 @@ std::vector<CellPos> XlsxHandle::find_cell_by_value(const std::string& sheet_nam
         });
     }
 
-    // 4. 遍历已用区域查找匹配
+    // 5. 遍历已用区域查找匹配
     try
     {
         for (unsigned int r = start_row; r <= end_row; ++r)
@@ -249,6 +309,7 @@ std::vector<CellPos> XlsxHandle::find_cell_by_value(const std::string& sheet_nam
             {
                 // 读取单元格内容并处理大小写
                 std::string cell_str = ws.cell(r, c).value().getString();
+                trim(cell_str);
                 if (!case_sensitive)
                 {
                     std::transform(cell_str.begin(), cell_str.end(), cell_str.begin(), [](unsigned char c) {
