@@ -22,11 +22,16 @@ int main() {
     }
 
     unsigned int range_read_start_row = 2, range_read_start_col = 1, range_read_end_row = 9, range_read_end_col = 7;
-    auto range_data = xlsx.read_range(sheets[0], range_read_start_row, range_read_start_col, range_read_end_row, range_read_end_col);
-    std::cout << "读取区域 (" << range_read_start_row << "," << range_read_start_col << ") to (" << range_read_end_row << "," << range_read_end_col << ") 内容: " << std::endl;
-    for (const auto &cell_val : range_data)
+    std::vector<std::vector<std::string>> all_sheets_data;
+    for (const auto &name : sheets)
     {
-        std::cout << cell_val << " | ";
+        auto range_data = xlsx.read_range(name, range_read_start_row, range_read_start_col, range_read_end_row, range_read_end_col);
+        all_sheets_data.push_back(range_data);
+        std::cout << "读取区域 (" << range_read_start_row << "," << range_read_start_col << ") to (" << range_read_end_row << "," << range_read_end_col << ") 内容: " << std::endl;
+        for (const auto &cell_val : range_data)
+        {
+            std::cout << cell_val << " | ";
+        }
     }
 
     xlsx.close_file();
@@ -47,35 +52,47 @@ int main() {
         std::cout << "工作表: " << name << std::endl;
     }
 
-    // 遍历每个要搜索的值，将结果按顺序存入 all_find_results
-    std::vector<std::vector<CellPos>> all_find_results;
-    for (const auto& range_data_one : range_data) // 注意加 const&，避免拷贝
+    
+    // 将所有搜索内容在数据源中依次搜索
+    std::vector<std::vector<std::vector<CellPos>>> all_sheets_find_results;
+    for (auto sheet_data : all_sheets_data)
     {
-        auto find_results = xlsx_find.find_cell_by_value(sheets_find[0], range_data_one);
-        all_find_results.push_back(find_results); // 正确：结果顺序与 range_data 完全对应
+        // 遍历每个要搜索的值，将结果按顺序存入 sheet_find_results (一个值可能有多个或零个搜索结果，所以用 vector 存起来)
+        std::vector<std::vector<CellPos>> sheet_find_results;
+        for (const auto& value : sheet_data)
+        {
+            auto find_results = xlsx_find.find_cell_by_value(sheets_find[0], value);
+            sheet_find_results.push_back(find_results);
+        }
+        all_sheets_find_results.push_back(sheet_find_results);
     }
 
-    // 输出结果（此时 i 对应的就是 range_data[i] 的查找结果）
+    // 输出结果
     std::cout << "\n查找结果: " << std::endl;
-    for (size_t i = 0; i < range_data.size(); ++i)
+    for (size_t s = 0; s < all_sheets_find_results.size(); ++s)
     {
-        std::cout << "值 '" << range_data[i] << "' 出现位置: ";
-        if (all_find_results[i].empty())
+        std::cout << "第 " << (s + 1) << " 个搜索源工作表结果: " << std::endl;
+        auto sheet_find_results = all_sheets_find_results[s];
+        auto range_data = all_sheets_data[s];
+        for (size_t i = 0; i < range_data.size(); ++i)
         {
-            std::cout << "未找到";
-        }
-        else
-        {
-            for (const auto& pos : all_find_results[i])
+            std::cout << "值 '" << range_data[i] << "' 出现位置: ";
+            if (sheet_find_results[i].empty())
             {
-                // 可选：将列号转为字母（如 1→A），更直观
-                std::cout << "(" << pos.row << "," << pos.col << ") ";
+                std::cout << "未找到";
             }
+            else
+            {
+                for (const auto& pos : sheet_find_results[i])
+                {
+                    std::cout << "(" << pos.row << "," << pos.col << ") ";
+                }
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
     }
 
-    // "消费时间" "车牌号码" "数量"
+    // 找对应的 "消费时间", "车牌号码", "数量" 列
     std::string data_tag = "消费时间";
     std::string car_tag = "车牌号码";
     std::string num_tag = "数量";
@@ -99,51 +116,63 @@ int main() {
         std::string car;
         std::string num;
     };
-    std::vector<std::vector<find_data>> final_datas;
-
-    for (size_t i = 0; i < all_find_results.size(); ++i)
+    std::vector<std::vector<std::vector<find_data>>> all_final_datas;
+    for (size_t s = 0; s < all_sheets_find_results.size(); ++s)
     {
-        std::vector<find_data> one_data;
-        for (const auto& pos : all_find_results[i])
+        auto sheet_find_results = all_sheets_find_results[s];
+        auto range_data = all_sheets_data[s];
+        std::vector<std::vector<find_data>> final_datas;
+        for (size_t i = 0; i < sheet_find_results.size(); ++i)
         {
-            find_data fd;
-            if (data_col != -1)
+            std::vector<find_data> one_data;
+            for (const auto& pos : sheet_find_results[i])
             {
-                fd.data = xlsx_find.read_cell(sheets_find[0], pos.row, data_col);
+                find_data fd;
+                if (data_col != -1)
+                {
+                    fd.data = xlsx_find.read_cell(sheets_find[0], pos.row, data_col);
+                }
+                if (car_col != -1)
+                {
+                    fd.car = xlsx_find.read_cell(sheets_find[0], pos.row, car_col);
+                }
+                if (num_col != -1)
+                {
+                    fd.num = xlsx_find.read_cell(sheets_find[0], pos.row, num_col);
+                }
+                one_data.push_back(fd);
             }
-            if (car_col != -1)
-            {
-                fd.car = xlsx_find.read_cell(sheets_find[0], pos.row, car_col);
-            }
-            if (num_col != -1)
-            {
-                fd.num = xlsx_find.read_cell(sheets_find[0], pos.row, num_col);
-            }
-            one_data.push_back(fd);
+            final_datas.push_back(one_data);
         }
-        final_datas.push_back(one_data);
+        all_final_datas.push_back(final_datas);
     }
 
     // 输出结果
     std::cout << "\n最终结果: " << std::endl;
-    for (size_t i = 0; i < range_data.size(); ++i)
+    for (size_t s = 0; s < all_final_datas.size(); ++s)
     {
-        std::cout << "值 '" << range_data[i] << "' 对应数据: " << std::endl;
-        if (final_datas[i].empty())
+        auto final_datas = all_final_datas[s];
+        auto range_data = all_sheets_data[s];
+        std::cout << "第 " << (s + 1) << " 个搜索源工作表结果: " << std::endl;
+        for (size_t i = 0; i < range_data.size(); ++i)
         {
-            std::cout << "未找到对应数据" << std::endl;
-        }
-        else
-        {
-            for (const auto& fd : final_datas[i])
+            std::cout << "值 '" << range_data[i] << "' 对应数据: " << std::endl;
+            if (final_datas[i].empty())
             {
-                std::cout << "消费时间: " << fd.data << ", 车牌号码: " << fd.car << ", 数量: " << fd.num << std::endl;
+                std::cout << "未找到对应数据" << std::endl;
+            }
+            else
+            {
+                for (const auto& fd : final_datas[i])
+                {
+                    std::cout << "消费时间: " << fd.data << ", 车牌号码: " << fd.car << ", 数量: " << fd.num << std::endl;
+                }
             }
         }
     }
     xlsx_find.close_file();
 
-
+    // 将结果写入新文件
     XlsxHandle xlsx_result;
     // 创建新文件
     if (!xlsx_result.create_file("../doc/find_result.xlsx")) {
@@ -174,25 +203,28 @@ int main() {
 
     // 写入数据
     unsigned int current_row = 2;
-    for (size_t i = 0; i < range_data.size(); ++i)
+    for (size_t s = 0; s < all_final_datas.size(); ++s)
     {
-        if (!final_datas[i].empty())
+        auto final_datas = all_final_datas[s];
+        for (size_t i = 0; i < final_datas.size(); ++i)
         {
-            for (const auto& fd : final_datas[i])
+            if (!final_datas[i].empty())
             {
-                xlsx_result.write_cell(result_sheet, current_row, 1, fd.data);
-                xlsx_result.write_cell(result_sheet, current_row, 2, fd.car);
-                xlsx_result.write_cell(result_sheet, current_row, 3, fd.num);
-                current_row++;
+                for (const auto& fd : final_datas[i])
+                {
+                    xlsx_result.write_cell(result_sheet, current_row, 1, fd.data);
+                    xlsx_result.write_cell(result_sheet, current_row, 2, fd.car);
+                    xlsx_result.write_cell(result_sheet, current_row, 3, fd.num);
+                    current_row++;
+                }
             }
         }
-        //current_row++;
+        current_row++;
     }
 
     // 保存并关闭文件
     xlsx_result.save_file("../doc/find_result.xlsx");
     xlsx_result.close_file();
-
 
     return 0;
 }
