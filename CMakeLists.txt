@@ -17,12 +17,14 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include/OpenXLSX
     ${PROJECT_SOURCE_DIR}/include/OpenXLSX/external
     ${PROJECT_SOURCE_DIR}/lib/jsoncpp/include
+    ${PROJECT_SOURCE_DIR}/src/excel_finder
     ${PROJECT_SOURCE_DIR}/src/configfile
     ${PROJECT_SOURCE_DIR}/src/xlsx_handle
     ${PROJECT_SOURCE_DIR}/src/utils
 )
 
 # 子模块
+add_subdirectory(src/excel_finder)
 add_subdirectory(src/xlsx_handle)
 add_subdirectory(src/configfile)
 add_subdirectory(src/utils)
@@ -42,6 +44,7 @@ target_link_libraries(yu_xlsx
     PRIVATE
         ${OPENXLSX_LIB}
         ${OPENXLSX_NOWIDE_LIB}
+        excel_finder
         xlsx_handle
         configfile
         utils
