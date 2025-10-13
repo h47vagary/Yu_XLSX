@@ -80,6 +80,10 @@ public:
     // 在控制台打印查找结果
     void print_results() const;
 
+    // 重置结果表（即删除表后重新创建表）
+    
+    
+
 private:
     XlsxHandle source_xlsx_;
     XlsxHandle target_xlsx_;
@@ -100,5 +104,8 @@ private:
     bool find_and_extract_data_from_target(const std::string& target_sheet_name,
                                            const std::vector<std::string>& source_value,
                                            ValueResult& out_value_result);
+
+    void date_simplify(std::string& date_str);
+
 };
 

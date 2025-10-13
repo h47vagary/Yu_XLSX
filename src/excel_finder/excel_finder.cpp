@@ -2,6 +2,7 @@
 #include <iostream>
 #include <filesystem>
 #include <tuple>
+#include <regex>
 
 ExcelFinder::ExcelFinder(const std::string &source_file_path, const std::string &target_file_path)
     : source_file_path(source_file_path),
@@ -141,6 +142,17 @@ bool ExcelFinder::find_and_extract_data_from_target(const std::string& target_sh
     return true;
 }
 
+void ExcelFinder::date_simplify(std::string &date_str)
+{
+    std::regex re(R"(^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$)");
+    if (std::regex_match(date_str, re))
+    {
+        date_str = date_str.substr(0, 10);
+    }
+}
+
+
+
 void ExcelFinder::print_results() const 
 {
     std::cout << "\n==================== 查找结果汇总 ====================" << std::endl;
@@ -210,14 +222,30 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
     // 6. 写入数据
     unsigned int current_row = 2;
     for (const auto& sheet_result : results_) {
+
+        // 收集整个块内的所有记录
+        std::vector<FoundRecord> block_records;
         for (const auto& value_result : sheet_result.value_results) {
-            for (const auto& record : value_result.found_records) {
-                xlsx_result.write_cell(result_sheet, current_row, 1, record.data_time);
-                xlsx_result.write_cell(result_sheet, current_row, 2, record.car_number);
-                xlsx_result.write_cell(result_sheet, current_row, 3, record.quantity);
-                current_row++;
+            for (auto record : value_result.found_records) {
+                date_simplify(record.data_time);            // 日期简化
+                block_records.push_back(record);
             }
         }
+
+        // 对整个块按日期排序
+        std::sort(block_records.begin(), block_records.end(),
+                  [](const FoundRecord& a, const FoundRecord& b) {
+                      return a.data_time < b.data_time;
+                  });
+
+        // 写入文件
+        for (const auto& record : block_records) {
+            xlsx_result.write_cell(result_sheet, current_row, 1, record.data_time);
+            xlsx_result.write_cell(result_sheet, current_row, 2, record.car_number);
+            xlsx_result.write_cell(result_sheet, current_row, 3, record.quantity);
+            current_row++;
+        }
+
         // 不同源工作表结果之间留一行空白
         current_row++;
     }
