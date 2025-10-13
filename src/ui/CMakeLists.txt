@@ -1,9 +1,15 @@
+# # ui 子目录的 CMakeLists.txt
+# qt5_add_resources(UI_RESOURCES_RCC
+#     qml.qrc
+# )
+
+# # 导出给上层 CMakeLists
+# set(UI_RESOURCES_RCC ${UI_RESOURCES_RCC} PARENT_SCOPE)
+
 # src/ui/CMakeLists.txt
+qt5_add_resources(UI_RESOURCES_RCC
+    qml.qrc
+)
 
-qt5_add_resources(UI_RESOURCES_RCC qml.qrc)
-
-# 用静态库封装资源
-add_library(ui_resources STATIC ${UI_RESOURCES_RCC})
-
-# 导出给上层
-set(UI_RESOURCES_LIB ui_resources PARENT_SCOPE)
+# 将生成的源文件列表导出给上层
+set(UI_RESOURCES_RCC ${UI_RESOURCES_RCC} PARENT_SCOPE)

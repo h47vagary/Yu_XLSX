@@ -11,26 +11,39 @@ ApplicationWindow {
 
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#3a6186" }
-            GradientStop { position: 1.0; color: "#89253e" }
-        }
+        color: "#f0f0f0" // 简洁背景
+        border.color: "#cccccc"
+        radius: 6
 
         ColumnLayout {
             anchors.centerIn: parent
             spacing: 20
             width: parent.width * 0.8
 
-            TextField {
-                id: sourceFile
-                placeholderText: "数据源文件路径"
-                Layout.fillWidth: true
+            RowLayout {
+                spacing: 10
+                TextField {
+                    id: sourceFile
+                    placeholderText: "选择数据源文件"
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: "浏览"
+                    onClicked: fileDialogSource.open()
+                }
             }
 
-            TextField {
-                id: targetFile
-                placeholderText: "目标文件路径"
-                Layout.fillWidth: true
+            RowLayout {
+                spacing: 10
+                TextField {
+                    id: targetFile
+                    placeholderText: "选择目标文件"
+                    Layout.fillWidth: true
+                }
+                Button {
+                    text: "浏览"
+                    onClicked: fileDialogTarget.open()
+                }
             }
 
             TextField {
@@ -56,6 +69,21 @@ ApplicationWindow {
                     messageDialog.open()
                 }
             }
+        }
+
+        // 文件选择对话框
+        FileDialog {
+            id: fileDialogSource
+            title: "选择数据源文件"
+            nameFilters: ["Excel 文件 (*.xlsx *.xls)"]
+            onAccepted: sourceFile.text = fileUrl
+        }
+
+        FileDialog {
+            id: fileDialogTarget
+            title: "选择目标文件"
+            nameFilters: ["Excel 文件 (*.xlsx *.xls)"]
+            onAccepted: targetFile.text = fileUrl
         }
 
         MessageDialog {
