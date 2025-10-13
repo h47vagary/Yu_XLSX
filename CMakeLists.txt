@@ -4,12 +4,14 @@ project(yu_xlsx)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_ON ON)
 
-# Qt 所需
-# set(CMAKE_PREFIX_PATH "D:/QT/5.12.9/mingw73_64/lib/cmake")
-# find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport)
-# set(CMAKE_AUTOMOC ON)
-# set(CMAKE_AUTOUIC ON)
-# set(CMAKE_AUTORCC ON)
+
+#Qt 所需
+set(CMAKE_PREFIX_PATH "D:/QT/5.12.9/mingw73_64/lib/cmake")
+find_package(Qt5 REQUIRED COMPONENTS Quick QuickControls2)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 # 头文件
 include_directories(
@@ -24,11 +26,11 @@ include_directories(
 )
 
 # 子模块
+add_subdirectory(src/ui)
 add_subdirectory(src/excel_finder)
 add_subdirectory(src/xlsx_handle)
 add_subdirectory(src/configfile)
 add_subdirectory(src/utils)
-#add_subdirectory(src/ui)
 
 # 主程序
 add_executable(yu_xlsx src/main.cpp)
@@ -44,9 +46,11 @@ target_link_libraries(yu_xlsx
     PRIVATE
         ${OPENXLSX_LIB}
         ${OPENXLSX_NOWIDE_LIB}
+        Qt5::Quick
+        Qt5::QuickControls2
         excel_finder
         xlsx_handle
         configfile
         utils
-#        ui
+        ${UI_RESOURCES_LIB}    # 链接资源库
 )
