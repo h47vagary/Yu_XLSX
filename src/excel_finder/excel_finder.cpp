@@ -1,5 +1,6 @@
 #include "excel_finder.h"
 #include <iostream>
+#include <filesystem>
 #include <tuple>
 
 ExcelFinder::ExcelFinder(const std::string &source_file_path, const std::string &target_file_path)
@@ -161,32 +162,52 @@ void ExcelFinder::print_results() const
     std::cout << "======================================================" << std::endl;
 }
 
-bool ExcelFinder::export_results(const std::string& output_file_path) 
+bool ExcelFinder::export_results(const std::string& output_file_path_base) 
 {
-    std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path << "..." << std::endl;
+    std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path_base << "..." << std::endl;
+
+    std::string real_file_path = output_file_path_base;
     XlsxHandle xlsx_result;
-    if (!xlsx_result.create_file(output_file_path)) {
-        std::cerr << "[ExcelFinder] 创建结果文件失败!" << std::endl;
-        return false;
-    }
 
-    const std::string result_sheet = "结果";
-
-    // 不再尝试删除默认工作表，直接检查或创建目标工作表
-    if (!xlsx_result.is_sheet_exist(result_sheet)) {
-        if (!xlsx_result.create_sheet(result_sheet)) {
-            std::cerr << "[ExcelFinder] 添加结果工作表失败!" << std::endl;
-            xlsx_result.close_file();
+    // 1. 判断文件是否存在，若存在则直接打开
+    if (std::filesystem::exists(real_file_path)) {
+        if (!xlsx_result.open_file(real_file_path)) {
+            std::cerr << "[ExcelFinder] 打开已存在文件失败!" << std::endl;
+            return false;
+        }
+    } else {
+        // 文件不存在则创建
+        if (!xlsx_result.create_file(real_file_path)) {
+            std::cerr << "[ExcelFinder] 创建结果文件失败!" << std::endl;
             return false;
         }
     }
 
-    // 写表头
+    // 2. 自动生成结果表名（结果-1, 结果-2 …）
+    int idx = 1;
+    std::string result_sheet;
+    do {
+        result_sheet = "结果-" + std::to_string(idx++);
+    } while (xlsx_result.is_sheet_exist(result_sheet));
+
+    // 3. 创建结果表
+    if (!xlsx_result.create_sheet(result_sheet)) {
+        std::cerr << "[ExcelFinder] 添加结果工作表失败!" << std::endl;
+        xlsx_result.close_file();
+        return false;
+    }
+
+    // 4. 删除默认Sheet1（如果存在且不是结果表）
+    if (xlsx_result.is_sheet_exist("Sheet1") && result_sheet != "Sheet1") {
+        xlsx_result.delete_sheet("Sheet1");
+    }
+
+    // 5. 写表头
     xlsx_result.write_cell(result_sheet, 1, 1, "日期");
     xlsx_result.write_cell(result_sheet, 1, 2, "车牌号码");
     xlsx_result.write_cell(result_sheet, 1, 3, "数量");
 
-    // 写入数据
+    // 6. 写入数据
     unsigned int current_row = 2;
     for (const auto& sheet_result : results_) {
         for (const auto& value_result : sheet_result.value_results) {
@@ -197,18 +218,18 @@ bool ExcelFinder::export_results(const std::string& output_file_path)
                 current_row++;
             }
         }
-        // 在不同源工作表的结果之间留一行空白
+        // 不同源工作表结果之间留一行空白
         current_row++;
     }
 
-    // 保存
-    if (!xlsx_result.save_file(output_file_path)) {
+    // 7. 保存文件
+    if (!xlsx_result.save_file(real_file_path)) {
         std::cerr << "[ExcelFinder] 保存结果文件失败!" << std::endl;
         xlsx_result.close_file();
         return false;
     }
 
     xlsx_result.close_file();
-    std::cout << "[ExcelFinder] 结果已成功导出。" << std::endl;
+    std::cout << "[ExcelFinder] 结果已成功导出到表 " << result_sheet << std::endl;
     return true;
 }
