@@ -75,6 +75,9 @@ bool ExcelFinder::execute()
         SheetResult sheet_result;
         sheet_result.sheet_name = sheet_name;
 
+        // 读取名称
+        sheet_result.group_name = source_xlsx_.read_cell(sheet_name, 1, 2); // 读取B1单元格
+
         // 从源工作表读取数据
         auto source_values = source_xlsx_.read_range(sheet_name, read_start_row_, read_start_col_, read_end_row_, read_end_col_, false);
         if (source_values.empty()) {
@@ -82,6 +85,8 @@ bool ExcelFinder::execute()
             results_.push_back(sheet_result);
             continue;
         }
+        // 保留源工作表待搜索数据
+        sheet_result.find_values = source_values;
 
         // 遍历每个源值，进行查找
         for (const auto& source_value : source_values) {
@@ -151,13 +156,12 @@ void ExcelFinder::date_simplify(std::string &date_str)
     }
 }
 
-
-
 void ExcelFinder::print_results() const 
 {
     std::cout << "\n==================== 查找结果汇总 ====================" << std::endl;
     for (const auto& sheet_result : results_) {
         std::cout << "--- 源工作表: " << sheet_result.sheet_name << " ---" << std::endl;
+        std::cout << "名称: " << sheet_result.group_name << std::endl;
         if (sheet_result.value_results.empty()) {
             std::cout << "  该工作表在目标文件中未找到任何匹配项。" << std::endl;
             continue;
@@ -215,13 +219,17 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
     }
 
     // 5. 写表头
-    xlsx_result.write_cell(result_sheet, 1, 1, "日期");
-    xlsx_result.write_cell(result_sheet, 1, 2, "车牌号码");
-    xlsx_result.write_cell(result_sheet, 1, 3, "数量");
+    xlsx_result.write_cell(result_sheet, 1, 1, "名称");
+    xlsx_result.write_cell(result_sheet, 1, 2, "搜索源");
+    xlsx_result.write_cell(result_sheet, 1, 3, "日期");
+    xlsx_result.write_cell(result_sheet, 1, 4, "车牌号码");
+    xlsx_result.write_cell(result_sheet, 1, 5, "数量");
 
     // 6. 写入数据
     unsigned int current_row = 2;
     for (const auto& sheet_result : results_) {
+
+        bool first_entry_in_sheet = true; // 标记是否为该表的第一条记录
 
         // 收集整个块内的所有记录
         std::vector<FoundRecord> block_records;
@@ -238,16 +246,32 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
                       return a.data_time < b.data_time;
                   });
 
-        // 写入文件
-        for (const auto& record : block_records) {
-            xlsx_result.write_cell(result_sheet, current_row, 1, record.data_time);
-            xlsx_result.write_cell(result_sheet, current_row, 2, record.car_number);
-            xlsx_result.write_cell(result_sheet, current_row, 3, record.quantity);
+        // 查看搜索源文件的size和block_records的size
+        size_t record_count = block_records.size();
+        size_t source_count = sheet_result.find_values.size();
+        size_t max_count = std::max(record_count, source_count);
+
+        for (size_t i = 0; i < max_count; ++i) {
+            // 名称列
+            if (i == 0) {
+                xlsx_result.write_cell(result_sheet, current_row, 1, sheet_result.group_name);
+            }
+
+            // 搜索源
+            if (i < source_count)
+                xlsx_result.write_cell(result_sheet, current_row, 2, sheet_result.find_values[i]);
+
+            // 日期、车牌、数量
+            if (i < record_count) {
+                xlsx_result.write_cell(result_sheet, current_row, 3, block_records[i].data_time);
+                xlsx_result.write_cell(result_sheet, current_row, 4, block_records[i].car_number);
+                xlsx_result.write_cell(result_sheet, current_row, 5, block_records[i].quantity);
+            }
             current_row++;
         }
 
-        // 不同源工作表结果之间留一行空白
-        current_row++;
+        // 空行分隔不同工作表的结果
+        current_row += 2;
     }
 
     // 7. 保存文件

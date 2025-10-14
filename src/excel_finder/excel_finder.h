@@ -44,7 +44,9 @@ struct ValueResult {
 
 struct SheetResult {
     std::string sheet_name;                 // 源工作表名称
+    std::string group_name;                 // 名称
     std::vector<ValueResult> value_results; // 每个源值对应的所有匹配记录
+    std::vector<std::string> find_values;   // 该表中所有需要查找的值
 };
 
 /**
