@@ -493,11 +493,11 @@ std::vector<std::string> XlsxHandle::read_range(const std::string &sheet_name, u
                 }
             }
         }
-        std::cout << "[XlsxHandle] Success: Read range (" << start_row << "," << start_col << ") to (" << end_row << "," << end_col << ") - " << range_data.size() << " cells" << std::endl;
+        //std::cout << "[XlsxHandle] Success: Read range (" << start_row << "," << start_col << ") to (" << end_row << "," << end_col << ") - " << range_data.size() << " cells" << std::endl;
     }
     catch (const OpenXLSX::XLException& e)
     {
-        std::cerr << "[XlsxHandle] Error: Read range failed - " << e.what() << std::endl;
+        //std::cerr << "[XlsxHandle] Error: Read range failed - " << e.what() << std::endl;
     }
 
     return range_data;
@@ -586,6 +586,85 @@ unsigned int XlsxHandle::get_last_col(const std::string& sheet_name)
         return end_col;
     }
     return 0; // 无数据时返回 0
+}
+
+// 获取整个工作表（基于已用区域）
+bool XlsxHandle::cache_sheet_data(const std::string &sheet_name)
+{
+    if (!is_open_) return false;
+    if (sheet_cache_.count(sheet_name)) return true; // 已缓存
+
+    OpenXLSX::XLWorksheet ws;
+    if (!get_worksheet(sheet_name, ws)) return false;
+
+    unsigned int start_r, start_c, end_r, end_c;
+    if (!get_used_range(sheet_name, start_r, start_c, end_r, end_c)) return false;
+
+    std::vector<std::vector<std::string>> table;
+    table.reserve(end_r - start_r + 1);
+
+    for (unsigned int r = start_r; r <= end_r; ++r) {
+        std::vector<std::string> row;
+        row.reserve(end_c - start_c + 1);
+        for (unsigned int c = start_c; c <= end_c; ++c) {
+            row.push_back(ws.cell(r, c).value().getString());
+        }
+        table.push_back(std::move(row));
+    }
+
+    sheet_cache_[sheet_name] = std::move(table);
+    range_cache_[sheet_name] = {start_r, start_c, end_r, end_c};
+    return true;
+}
+
+bool XlsxHandle::get_used_range_cached(const std::string &sheet_name, unsigned int &sr, unsigned int &sc, unsigned int &er, unsigned int &ec)
+{
+    if (range_cache_.count(sheet_name)) {
+        std::tie(sr, sc, er, ec) = range_cache_[sheet_name];
+        return true;
+    }
+    return get_used_range(sheet_name, sr, sc, er, ec);
+}
+
+bool XlsxHandle::build_index(const std::string &sheet_name, bool case_sensitive)
+{
+    if (!cache_sheet_data(sheet_name)) return false;
+
+    const auto& table = sheet_cache_[sheet_name];
+    std::unordered_map<std::string, std::vector<CellPos>>& index = index_cache_[sheet_name];
+    index.clear();
+
+    for (unsigned int r = 0; r < table.size(); ++r) {
+        for (unsigned int c = 0; c < table[r].size(); ++c) {
+            std::string key = table[r][c];  // 具体单元格的值
+            if (!case_sensitive) {
+                std::transform(key.begin(), key.end(), key.begin(), ::tolower); // 默认转小写
+            }
+            index[key].emplace_back(r + 1, c + 1);  // 将行列添加到索引缓存
+        }
+    }
+
+    std::cout << "[XlsxHandle] Index built for '" << sheet_name 
+              << "' (" << index.size() << " unique values)" << std::endl;
+    return true;
+}
+
+// 第一次搜索：建立索引, 后续搜索：读哈希表返回结果
+std::vector<CellPos> XlsxHandle::find_cell_by_value_fast(const std::string &sheet_name, const std::string &value, bool case_sensitive)
+{
+    if (!index_cache_.count(sheet_name)) {
+        build_index(sheet_name, case_sensitive);
+    }
+
+    std::string key = value;
+    if (!case_sensitive)
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+    auto it = index_cache_[sheet_name].find(key);
+    if (it != index_cache_[sheet_name].end()) {
+        return it->second;
+    }
+    return {};
 }
 
 // 辅助函数：获取工作表

@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "xlsx_handle.h"
 #include "config_file.h"
 
@@ -103,9 +104,16 @@ private:
 
     std::vector<SheetResult> results_;
 
-    bool find_and_extract_data_from_target(const std::string& target_sheet_name,
-                                           const std::vector<std::string>& source_value,
-                                           ValueResult& out_value_result);
+    struct ColumnIndex {
+        int data_col = -1;
+        int car_col  = -1;
+        int num_col  = -1;
+    };
+
+    bool find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
+                                                const std::string& source_value,
+                                                ValueResult& out_value_result,
+                                                const ColumnIndex& col_idx);
 
     void date_simplify(std::string& date_str);
 
