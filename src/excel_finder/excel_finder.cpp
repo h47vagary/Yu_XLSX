@@ -87,6 +87,12 @@ bool ExcelFinder::execute()
         std::cerr << "[ExcelFinder]错误: 未找到车牌列" <<  car_tag_ << "." << std::endl;
         return false;
     }
+    if (col_idx.data_col == -1) {
+        std::cerr << "[ExcelFinder]错误：未找到日期列" << data_tag_ << "." << std::endl;
+    }
+    if (col_idx.num_col == -1) {
+        std::cerr << "[ExcelFinder]错误：未找到数量列" << num_tag_ << "." << std::endl;
+    }
 
     // 遍历所有源工作表
     for (const auto& sheet_name : source_sheets) {
@@ -112,8 +118,10 @@ bool ExcelFinder::execute()
             // 单个 source_value 调用
             find_and_extract_data_from_target_fast(target_sheet, source_value, value_result, col_idx);
             
-            if (!value_result.found_records.empty())
+            if (!value_result.found_records.empty()) {
                 sheet_result.value_results.push_back(value_result);
+            }
+                
         }
 
         results_.push_back(sheet_result);
@@ -129,7 +137,10 @@ bool ExcelFinder::find_and_extract_data_from_target_fast(const std::string& targ
                                                          const ColumnIndex& col_idx)
 {
     auto positions = target_xlsx_.find_cell_by_value_fast(target_sheet_name, source_value, false);
-    if (positions.empty()) return false;
+    if (positions.empty()) {
+        std::cout << "can't find value: " << source_value << " int sheet name: " << target_sheet_name << std::endl;
+        return false;
+    }
 
     const auto& table = target_xlsx_.get_sheet_cache(target_sheet_name);
 
@@ -139,6 +150,8 @@ bool ExcelFinder::find_and_extract_data_from_target_fast(const std::string& targ
         if (col_idx.car_col  != -1) record.car_number = table[pos.row-1][col_idx.car_col-1];
         if (col_idx.num_col  != -1) record.quantity   = table[pos.row-1][col_idx.num_col-1];
 
+        std::cout << "[sheet_name]: " << target_sheet_name << " found " << "[data_time]: " << record.data_time 
+                    << " [car_number]: " << record.car_number << " [quantity]: " << record.quantity << std::endl;
         date_simplify(record.data_time);
         out_value_result.found_records.push_back(record);
     }
@@ -177,108 +190,103 @@ void ExcelFinder::print_results() const
     std::cout << "======================================================" << std::endl;
 }
 
-bool ExcelFinder::export_results(const std::string& output_file_path_base)
+bool ExcelFinder::export_results(const std::string& output_file_path_base) 
 {
     std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path_base << "..." << std::endl;
 
     std::string real_file_path = output_file_path_base;
     XlsxHandle xlsx_result;
 
-    // 打开已有文件或创建新文件
+    // 1. 判断文件是否存在，若存在则直接打开
     if (std::filesystem::exists(real_file_path)) {
         if (!xlsx_result.open_file(real_file_path)) {
             std::cerr << "[ExcelFinder] 打开已存在文件失败!" << std::endl;
             return false;
         }
     } else {
+        // 文件不存在则创建
         if (!xlsx_result.create_file(real_file_path)) {
             std::cerr << "[ExcelFinder] 创建结果文件失败!" << std::endl;
             return false;
         }
     }
 
-    // 自动生成结果表名
+    // 2. 自动生成结果表名（结果-1, 结果-2 …）
     int idx = 1;
     std::string result_sheet;
     do {
         result_sheet = "结果-" + std::to_string(idx++);
     } while (xlsx_result.is_sheet_exist(result_sheet));
 
+    // 3. 创建结果表
     if (!xlsx_result.create_sheet(result_sheet)) {
         std::cerr << "[ExcelFinder] 添加结果工作表失败!" << std::endl;
         xlsx_result.close_file();
         return false;
     }
 
-    // 删除默认Sheet1
+    // 4. 删除默认Sheet1（如果存在且不是结果表）
     if (xlsx_result.is_sheet_exist("Sheet1") && result_sheet != "Sheet1") {
         xlsx_result.delete_sheet("Sheet1");
     }
 
-    // 写表头
-    std::vector<std::string> headers = {"名称", "搜索源", "日期", "车牌号码", "数量"};
-    for (size_t i = 0; i < headers.size(); ++i) {
-        xlsx_result.write_cell(result_sheet, 1, static_cast<unsigned int>(i + 1), headers[i]);
-    }
+    // 5. 写表头
+    xlsx_result.write_cell(result_sheet, 1, 1, "名称");
+    xlsx_result.write_cell(result_sheet, 1, 2, "搜索源");
+    xlsx_result.write_cell(result_sheet, 1, 3, "日期");
+    xlsx_result.write_cell(result_sheet, 1, 4, "车牌号码");
+    xlsx_result.write_cell(result_sheet, 1, 5, "数量");
 
+    // 6. 写入数据
     unsigned int current_row = 2;
-
-    // 批量写入每个工作表结果
     for (const auto& sheet_result : results_) {
-        // 收集块内所有记录
-        struct RowData {
-            std::string group_name;
-            std::string source_value;
-            std::string date;
-            std::string car;
-            std::string quantity;
-        };
-        std::vector<RowData> block_rows;
 
-        size_t source_count = sheet_result.find_values.size();
+        bool first_entry_in_sheet = true; // 标记是否为该表的第一条记录
 
-        for (size_t i = 0; i < source_count; ++i) {
-            RowData row;
-            row.group_name = sheet_result.group_name;
-            row.source_value = sheet_result.find_values[i];
-
-            // 查找对应ValueResult
-            auto it = std::find_if(sheet_result.value_results.begin(),
-                                   sheet_result.value_results.end(),
-                                   [&](const ValueResult& vr) { return vr.source_value == row.source_value; });
-            if (it != sheet_result.value_results.end() && !it->found_records.empty()) {
-                // 按日期排序
-                std::vector<FoundRecord> sorted_records = it->found_records;
-                std::sort(sorted_records.begin(), sorted_records.end(),
-                          [](const FoundRecord& a, const FoundRecord& b) { return a.data_time < b.data_time; });
-
-                // 将每条记录拆成单独行
-                for (const auto& rec : sorted_records) {
-                    RowData r = row;
-                    r.date = rec.data_time;
-                    r.car = rec.car_number;
-                    r.quantity = rec.quantity;
-                    block_rows.push_back(r);
-                }
-            } else {
-                block_rows.push_back(row);
+        // 收集整个块内的所有记录
+        std::vector<FoundRecord> block_records;
+        for (const auto& value_result : sheet_result.value_results) {
+            for (auto record : value_result.found_records) {
+                date_simplify(record.data_time);            // 日期简化
+                block_records.push_back(record);
             }
         }
 
-        // 写入Excel
-        for (const auto& r : block_rows) {
-            xlsx_result.write_cell(result_sheet, current_row, 1, r.group_name);
-            xlsx_result.write_cell(result_sheet, current_row, 2, r.source_value);
-            xlsx_result.write_cell(result_sheet, current_row, 3, r.date);
-            xlsx_result.write_cell(result_sheet, current_row, 4, r.car);
-            xlsx_result.write_cell(result_sheet, current_row, 5, r.quantity);
-            ++current_row;
+        // 对整个块按日期排序
+        std::sort(block_records.begin(), block_records.end(),
+                  [](const FoundRecord& a, const FoundRecord& b) {
+                      return a.data_time < b.data_time;
+                  });
+
+        // 查看搜索源文件的size和block_records的size
+        size_t record_count = block_records.size();
+        size_t source_count = sheet_result.find_values.size();
+        size_t max_count = std::max(record_count, source_count);
+
+        for (size_t i = 0; i < max_count; ++i) {
+            // 名称列
+            if (i == 0) {
+                xlsx_result.write_cell(result_sheet, current_row, 1, sheet_result.group_name);
+            }
+
+            // 搜索源
+            if (i < source_count)
+                xlsx_result.write_cell(result_sheet, current_row, 2, sheet_result.find_values[i]);
+
+            // 日期、车牌、数量
+            if (i < record_count) {
+                xlsx_result.write_cell(result_sheet, current_row, 3, block_records[i].data_time);
+                xlsx_result.write_cell(result_sheet, current_row, 4, block_records[i].car_number);
+                xlsx_result.write_cell(result_sheet, current_row, 5, block_records[i].quantity);
+            }
+            current_row++;
         }
 
-        // 空行分隔
+        // 空行分隔不同工作表的结果
         current_row += 2;
     }
 
+    // 7. 保存文件
     if (!xlsx_result.save_file(real_file_path)) {
         std::cerr << "[ExcelFinder] 保存结果文件失败!" << std::endl;
         xlsx_result.close_file();

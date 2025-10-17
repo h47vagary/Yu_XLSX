@@ -600,14 +600,25 @@ bool XlsxHandle::cache_sheet_data(const std::string &sheet_name)
     unsigned int start_r, start_c, end_r, end_c;
     if (!get_used_range(sheet_name, start_r, start_c, end_r, end_c)) return false;
 
+    auto trim = [](const std::string &s) -> std::string {
+        size_t start = s.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos)
+            return "";
+        size_t end = s.find_last_not_of(" \t\r\n");
+        return s.substr(start, end - start + 1);
+    };
+
     std::vector<std::vector<std::string>> table;
     table.reserve(end_r - start_r + 1);
 
-    for (unsigned int r = start_r; r <= end_r; ++r) {
+    for (unsigned int r = start_r; r <= end_r; ++r)
+    {
         std::vector<std::string> row;
         row.reserve(end_c - start_c + 1);
-        for (unsigned int c = start_c; c <= end_c; ++c) {
-            row.push_back(ws.cell(r, c).value().getString());
+        for (unsigned int c = start_c; c <= end_c; ++c)
+        {
+            std::string value = ws.cell(r, c).value().getString();
+            row.push_back(trim(value)); // 去除首尾空格
         }
         table.push_back(std::move(row));
     }
@@ -616,6 +627,7 @@ bool XlsxHandle::cache_sheet_data(const std::string &sheet_name)
     range_cache_[sheet_name] = {start_r, start_c, end_r, end_c};
     return true;
 }
+
 
 bool XlsxHandle::get_used_range_cached(const std::string &sheet_name, unsigned int &sr, unsigned int &sc, unsigned int &er, unsigned int &ec)
 {
@@ -628,7 +640,10 @@ bool XlsxHandle::get_used_range_cached(const std::string &sheet_name, unsigned i
 
 bool XlsxHandle::build_index(const std::string &sheet_name, bool case_sensitive)
 {
-    if (!cache_sheet_data(sheet_name)) return false;
+    if (!cache_sheet_data(sheet_name)) {
+        std::cout << "not cache sheet data in build index" << std::endl;
+        return false;
+    } 
 
     const auto& table = sheet_cache_[sheet_name];
     std::unordered_map<std::string, std::vector<CellPos>>& index = index_cache_[sheet_name];
