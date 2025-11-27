@@ -1,6 +1,11 @@
 // finder_worker.cpp
 #include "finder_worker.h"
 
+#define EXCEL_FIND_START_ROW 2
+#define EXCEL_FIND_START_COL 1
+#define EXCEL_FIND_END_ROW 9
+#define EXCEL_FIND_END_COL 7
+
 FinderWorker::FinderWorker(const QString &searchFile,
                            const QString &targetFile,
                            const QString &outputFile,
@@ -22,7 +27,7 @@ void FinderWorker::process()
     }
 
     finder.set_tags("消费时间", "车牌号码", "数量");
-    finder.set_source_read_range(2, 1, 9, 7);
+    finder.set_source_read_range(EXCEL_FIND_START_ROW, EXCEL_FIND_START_COL, EXCEL_FIND_END_ROW, EXCEL_FIND_END_COL);
 
     if (!finder.execute()) {
         emit logMessage("查找任务执行失败！");

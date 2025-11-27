@@ -469,15 +469,8 @@ std::vector<std::string> XlsxHandle::read_range(const std::string &sheet_name, u
         std::cerr << "[XlsxHandle] Warning: Read range failed - no used range in sheet " << sheet_name << std::endl;
         return range_data;
     }
-
-    // 3. 检查目标范围是否在已用区域内
-    if (start_row < used_start_row || end_row > used_end_row || start_col < used_start_col || end_col > used_end_col || start_row > end_row || start_col > end_col)
-    {
-        std::cerr << "[XlsxHandle] Warning: Read range failed - range out of used range (" << used_start_row << "," << used_start_col << ") to (" << used_end_row << "," << used_end_col << ")" << std::endl;
-        return range_data;
-    }
     
-    // 4. 读取该范围所有单元格（按行优先顺序）
+    // 3. 读取该范围所有单元格（按行优先顺序）
     try
     {
         for (unsigned int r = start_row; r <= end_row; ++r)
@@ -556,7 +549,7 @@ bool XlsxHandle::get_used_range(const std::string& sheet_name, unsigned int& sta
             return false;
         }
 
-        std::cout << "[XlsxHandle] Success: Get used range - (" << start_row << "," << start_col << ") to (" << end_row << "," << end_col << ")" << std::endl;
+        std::cout << "[XlsxHandle] " << sheet_name <<  " Success: Get used range - (" << start_row << "," << start_col << ") to (" << end_row << "," << end_col << ")" << std::endl;
         return true;
     }
     catch (const OpenXLSX::XLException& e)

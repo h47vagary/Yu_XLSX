@@ -59,6 +59,10 @@ bool ExcelFinder::execute()
         std::cerr << "[ExcelFinder] 错误: 源文件没有工作表." << std::endl;
         return false;
     }
+    std::cout << "[ExcelFinder] 源文件包含 " << source_sheets.size() << " 个工作表." << std::endl;
+    for (auto source_sheet : source_sheets) {
+        std::cout << "  - " << source_sheet << std::endl;
+    }   
 
     // 获取目标文件的第一个工作表
     auto target_sheets = target_xlsx_.get_sheet_names();
@@ -109,6 +113,9 @@ bool ExcelFinder::execute()
         }
         // 保留源工作表待搜索数据
         sheet_result.find_values = source_values;
+
+        std::cout << "[ExcelFinder] 处理源工作表: " << sheet_name 
+                  << " (名称: " << sheet_result.group_name << ", 待搜索项数: " << source_values.size() << ")" << std::endl;
 
         // 遍历每个源值，进行查找
         for (const auto& source_value : source_values) {
