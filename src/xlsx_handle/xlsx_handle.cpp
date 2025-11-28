@@ -675,6 +675,78 @@ std::vector<CellPos> XlsxHandle::find_cell_by_value_fast(const std::string &shee
     return {};
 }
 
+void XlsxHandle::set_font_size(const std::string& sheet_name,
+                               int row, int col, double size)
+{
+    using namespace OpenXLSX;
+
+    if (!is_open_)
+    {
+        std::cerr << "[XlsxHandle] Error: Set font size failed - no file open!" << std::endl;
+        return;
+    }
+
+    XLWorksheet sheet;
+    if (!get_worksheet(sheet_name, sheet))
+    {
+        return;
+    }
+
+    XLCell cell = sheet.cell(XLCellReference(row, col));
+
+    XLStyles styles = doc_.styles();
+    XLFonts& fonts = styles.fonts();
+    XLCellFormats& cellFormats = styles.cellFormats();
+
+    XLStyleIndex cfIndex = cell.cellFormat();
+    XLCellFormat currentFormat = cellFormats[cfIndex];
+    XLStyleIndex fontIndex = currentFormat.fontIndex();
+
+    XLStyleIndex newFontIndex = fonts.create(fonts[fontIndex]);
+    fonts[newFontIndex].setFontSize(size);
+
+    XLStyleIndex newCFIndex = cellFormats.create(currentFormat);
+    cellFormats[newCFIndex].setFontIndex(newFontIndex);
+
+    cell.setCellFormat(newCFIndex);
+}
+
+void XlsxHandle::set_bold(const std::string& sheet_name,
+                          int row, int col, bool bold)
+{
+    using namespace OpenXLSX;
+
+    if (!is_open_)
+    {
+        std::cerr << "[XlsxHandle] Error: Set font size failed - no file open!" << std::endl;
+        return;
+    }
+
+    XLWorksheet sheet;
+    if (!get_worksheet(sheet_name, sheet))
+    {
+        return;
+    }
+
+    XLCell cell = sheet.cell(XLCellReference(row, col));
+
+    XLStyles styles = doc_.styles();
+    XLFonts& fonts = styles.fonts();
+    XLCellFormats& cellFormats = styles.cellFormats();
+
+    XLStyleIndex cfIndex = cell.cellFormat();
+    XLCellFormat currentFormat = cellFormats[cfIndex];
+    XLStyleIndex fontIndex = currentFormat.fontIndex();
+
+    XLStyleIndex newFontIndex = fonts.create(fonts[fontIndex]);
+    fonts[newFontIndex].setBold(bold);
+
+    XLStyleIndex newCFIndex = cellFormats.create(currentFormat);
+    cellFormats[newCFIndex].setFontIndex(newFontIndex);
+
+    cell.setCellFormat(newCFIndex);
+}
+
 // 辅助函数：获取工作表
 bool XlsxHandle::get_worksheet(const std::string& sheet_name, OpenXLSX::XLWorksheet& out_ws)
 {

@@ -93,16 +93,21 @@ public:
         return it->second;
     }
     
+    // ================== 样式设置接口 ==================
+    void set_font_size(const std::string& sheet_name, int row, int col, double size);
+    void set_bold(const std::string& sheet_name, int row, int col, bool bold);
+
+
 private:
     // 辅助函数
     bool get_worksheet(const std::string& sheet_name, OpenXLSX::XLWorksheet& out_ws); // 获取工作表（输出参数）
     bool is_cell_empty(const OpenXLSX::XLWorksheet& ws, unsigned int row, unsigned int col); // 判断单元格是否为空
 
     // 成员变量
-    OpenXLSX::XLDocument doc_;       // OpenXLSX 文档对象
-    bool is_open_;                   // 文件是否已打开
-    bool is_new_file_;               // 是否为新建文件（未保存过）
-    std::string current_file_path_;  // 当前文件路径
+    OpenXLSX::XLDocument doc_;              // OpenXLSX 文档对象
+    bool is_open_;                          // 文件是否已打开
+    bool is_new_file_;                      // 是否为新建文件（未保存过）
+    std::string current_file_path_;         // 当前文件路径
 
     // 缓存：sheet_name -> (二维表格数据)
     std::unordered_map<std::string, std::vector<std::vector<std::string>>> sheet_cache_;

@@ -2,6 +2,8 @@
 #include <iostream>
 #include <filesystem>
 
+#define XLSX_FIND_RESULT_FONT_SIZE 11
+
 ExcelFinder::ExcelFinder(const std::string &source_file_path, const std::string &target_file_path)
     : source_file_path(source_file_path),
       target_file_path(target_file_path)
@@ -243,6 +245,9 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
     xlsx_result.write_cell(result_sheet, 1, 3, "日期");
     xlsx_result.write_cell(result_sheet, 1, 4, "车牌号码");
     xlsx_result.write_cell(result_sheet, 1, 5, "数量");
+    for (int col = 1; col <= 5; ++col) {
+        xlsx_result.set_font_size(result_sheet, 1, col, XLSX_FIND_RESULT_FONT_SIZE);
+    }
 
     // 6. 写入数据
     unsigned int current_row = 2;
@@ -274,17 +279,22 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
             // 名称列
             if (i == 0) {
                 xlsx_result.write_cell(result_sheet, current_row, 1, sheet_result.group_name);
+                xlsx_result.set_font_size(result_sheet, current_row, 1, XLSX_FIND_RESULT_FONT_SIZE);
             }
 
             // 搜索源
             if (i < source_count)
                 xlsx_result.write_cell(result_sheet, current_row, 2, sheet_result.find_values[i]);
+                xlsx_result.set_font_size(result_sheet, current_row, 2, XLSX_FIND_RESULT_FONT_SIZE);
 
             // 日期、车牌、数量
             if (i < record_count) {
                 xlsx_result.write_cell(result_sheet, current_row, 3, block_records[i].data_time);
                 xlsx_result.write_cell(result_sheet, current_row, 4, block_records[i].car_number);
                 xlsx_result.write_cell(result_sheet, current_row, 5, block_records[i].quantity);
+                xlsx_result.set_font_size(result_sheet, current_row, 3, XLSX_FIND_RESULT_FONT_SIZE);
+                xlsx_result.set_font_size(result_sheet, current_row, 4, XLSX_FIND_RESULT_FONT_SIZE);
+                xlsx_result.set_font_size(result_sheet, current_row, 5, XLSX_FIND_RESULT_FONT_SIZE);
             }
             current_row++;
         }

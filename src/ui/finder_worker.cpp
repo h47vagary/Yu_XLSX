@@ -1,10 +1,12 @@
 // finder_worker.cpp
 #include "finder_worker.h"
 
-#define EXCEL_FIND_START_ROW 2
+// A2
+#define EXCEL_FIND_START_ROW 2 
 #define EXCEL_FIND_START_COL 1
-#define EXCEL_FIND_END_ROW 9
-#define EXCEL_FIND_END_COL 7
+// H10
+#define EXCEL_FIND_END_ROW 10
+#define EXCEL_FIND_END_COL 8
 
 FinderWorker::FinderWorker(const QString &searchFile,
                            const QString &targetFile,
