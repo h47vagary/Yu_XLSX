@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "xlsx_handle.h"
 #include "config_file.h"
 
@@ -44,7 +45,9 @@ struct ValueResult {
 
 struct SheetResult {
     std::string sheet_name;                 // 源工作表名称
+    std::string group_name;                 // 名称
     std::vector<ValueResult> value_results; // 每个源值对应的所有匹配记录
+    std::vector<std::string> find_values;   // 该表中所有需要查找的值
 };
 
 /**
@@ -101,9 +104,16 @@ private:
 
     std::vector<SheetResult> results_;
 
-    bool find_and_extract_data_from_target(const std::string& target_sheet_name,
-                                           const std::vector<std::string>& source_value,
-                                           ValueResult& out_value_result);
+    struct ColumnIndex {
+        int data_col = -1;
+        int car_col  = -1;
+        int num_col  = -1;
+    };
+
+    bool find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
+                                                const std::string& source_value,
+                                                ValueResult& out_value_result,
+                                                const ColumnIndex& col_idx);
 
     void date_simplify(std::string& date_str);
 
