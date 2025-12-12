@@ -1,7 +1,6 @@
-file(GLOB COMMON_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-message(STATUS "configfile sources: ${COMMON_SRC}")
-
-add_library(configfile STATIC ${COMMON_SRC})
+add_library(configfile STATIC
+                        config_file.cpp
+                        filepath_config.cpp)
 
 target_include_directories(configfile PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -11,12 +10,12 @@ target_include_directories(configfile PUBLIC
 # 链接 json 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(configfile
-        PRIVATE #${CMAKE_SOURCE_DIR}/lib/JsonCpp/debug/libjsoncpp.a
+        PRIVATE ${CMAKE_SOURCE_DIR}/lib/JsonCpp/debug/libjsoncpp.a
         utils
     )
 else()
     target_link_libraries(configfile
-        PRIVATE #${CMAKE_SOURCE_DIR}/lib/JsonCpp/release/libjsoncpp.a
+        PRIVATE ${CMAKE_SOURCE_DIR}/lib/JsonCpp/release/libjsoncpp.a
         utils
     )
 endif()

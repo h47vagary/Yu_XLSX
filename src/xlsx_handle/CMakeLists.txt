@@ -1,12 +1,9 @@
-file(GLOB COMMON_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-message(STATUS "xlsx handle sources: ${COMMON_SRC}")
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wno-deprecated-declarations)
 endif()
 
-
-add_library(xlsx_handle STATIC ${COMMON_SRC})
+add_library(xlsx_handle STATIC 
+                xlsx_handle.cpp)
 
 target_include_directories(xlsx_handle PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

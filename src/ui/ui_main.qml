@@ -71,6 +71,70 @@ ApplicationWindow {
             }
         }
 
+        GroupBox {
+            title: "单价配置"
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                spacing: 10
+
+                // 数据模型：数量区间 + 单价
+                ListModel {
+                    id: priceModel
+                }
+
+                // 显示所有规则
+                ColumnLayout {
+                    Repeater {
+                        model: priceModel
+                        delegate: RowLayout {
+                            spacing: 10
+
+                            TextField {
+                                placeholderText: "数量 起"
+                                text: model.start
+                                Layout.preferredWidth: 80
+                                onTextChanged: model.start = text
+                            }
+
+                            TextField {
+                                placeholderText: "数量 止"
+                                text: model.end
+                                Layout.preferredWidth: 80
+                                onTextChanged: model.end = text
+                            }
+
+                            TextField {
+                                placeholderText: "单价"
+                                text: model.price
+                                Layout.preferredWidth: 80
+                                onTextChanged: model.price = text
+                            }
+
+                            Button {
+                                text: "删除"
+                                onClicked: priceModel.remove(index)
+                            }
+                        }
+                    }
+                }
+
+                // 添加新规则按钮
+                Button {
+                    text: "添加单价规则"
+                    Layout.fillWidth: true
+                    onClicked: {
+                        priceModel.append({
+                            "start": "",
+                            "end": "",
+                            "price": ""
+                        })
+                    }
+                }
+            }
+        }
+
+
         // 文件选择对话框
         FileDialog {
             id: fileDialogSource

@@ -3,6 +3,9 @@
 #include <QQmlContext>
 #include "excel_finder.h"
 
+// 声明 Qt 生成的资源初始化函数
+extern int qInitResources_qml();
+
 class FinderBackend : public QObject
 {
     Q_OBJECT
@@ -28,6 +31,9 @@ public:
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    // 手动初始化资源
+    qInitResources_qml();
 
     FinderBackend backend;
 

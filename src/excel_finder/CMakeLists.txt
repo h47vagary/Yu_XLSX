@@ -1,12 +1,10 @@
-file(GLOB COMMON_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-message(STATUS "excel finder sources: ${COMMON_SRC}")
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wno-deprecated-declarations)
 endif()
 
 
-add_library(excel_finder STATIC ${COMMON_SRC})
+add_library(excel_finder STATIC 
+                        excel_finder.cpp)
 
 target_include_directories(excel_finder PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -17,7 +15,7 @@ target_include_directories(excel_finder PUBLIC
 )
 
 target_link_libraries( excel_finder
-    PRIVATE xlsx_handle
-    PRIVATE configfile
-    PRIVATE utils
+        xlsx_handle
+        configfile
+        utils
 )

@@ -1,15 +1,13 @@
-# # ui 子目录的 CMakeLists.txt
-# qt5_add_resources(UI_RESOURCES_RCC
-#     qml.qrc
-# )
-
-# # 导出给上层 CMakeLists
-# set(UI_RESOURCES_RCC ${UI_RESOURCES_RCC} PARENT_SCOPE)
-
-# src/ui/CMakeLists.txt
-qt5_add_resources(UI_RESOURCES_RCC
+qt5_add_resources(UI_QML
     qml.qrc
 )
 
-# 将生成的源文件列表导出给上层
-set(UI_RESOURCES_RCC ${UI_RESOURCES_RCC} PARENT_SCOPE)
+add_library(ui_lib STATIC
+    ${UI_QML}
+)
+
+target_link_libraries(ui_lib
+    Qt5::Qml
+    Qt5::Quick
+    Qt5::QuickControls2
+)
