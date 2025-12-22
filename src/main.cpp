@@ -1,10 +1,8 @@
 #include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#include <QQmlAPplicationEngine>
 #include <QQmlContext>
-#include "excel_finder.h"
 
-// 声明 Qt 生成的资源初始化函数
-extern int qInitResources_qml();
+#include "excel_finder.h"
 
 class FinderBackend : public QObject
 {
@@ -31,15 +29,11 @@ public:
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-
-    // 手动初始化资源
-    qInitResources_qml();
-
     FinderBackend backend;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("finderBackend", &backend);
-    engine.load(QUrl(QStringLiteral("qrc:/ui_main.qml")));
+    engine.loadFromModule("YuXlsx", "Main");
 
     if (engine.rootObjects().isEmpty())
         return -1;

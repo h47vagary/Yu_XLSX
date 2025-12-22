@@ -4,17 +4,11 @@ project(yu_xlsx)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_ON ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_PREFIX_PATH "D:/QT/5.12.9/mingw73_64/lib/cmake")
-find_package(Qt5 5.12 REQUIRED COMPONENTS 
-    Core
-    Gui
-    Qml
-    Quick 
-    QuickControls2
-)
+set(CMAKE_PREFIX_PATH "D:/QT6/6.10.1/mingw_64")
+find_package(Qt6 REQUIRED COMPONENTS Quick Quick3D)
+qt_standard_project_setup(REQUIRES 6.8)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
@@ -26,13 +20,31 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/utils
 )
 
-add_subdirectory(src/ui)
+# =========================
+# 子模块
+# =========================
 add_subdirectory(src/excel_finder)
 add_subdirectory(src/xlsx_handle)
 add_subdirectory(src/configfile)
 add_subdirectory(src/utils)
 
-add_executable(yu_xlsx src/main.cpp)
+# =========================
+# 可执行程序
+# =========================
+qt_add_executable(yu_xlsx
+    src/main.cpp
+)
+
+# ===== QML 模块 =====
+qt_add_qml_module(yu_xlsx
+    URI YuXlsx
+    VERSION 1.0
+    QML_FILES
+        src/ui/Main.qml
+        src/ui/component/SideBar.qml
+        #ui/page/XXX.qml
+)
+
 
 set(OPENXLSX_DIR "${PROJECT_SOURCE_DIR}/lib/OpenXLSX")
 set(OPENXLSX_LIB "${OPENXLSX_DIR}/libOpenXLSX.a")
@@ -40,12 +52,8 @@ set(OPENXLSX_NOWIDE_LIB "${OPENXLSX_DIR}/libnowide.a")
 
 target_link_libraries(yu_xlsx
     PRIVATE
-        ui_lib
-        Qt5::Core
-        Qt5::Gui
-        Qt5::Qml
-        Qt5::Quick
-        Qt5::QuickControls2
+        Qt6::Quick
+        Qt6::Quick3D
         excel_finder
         xlsx_handle
         configfile
