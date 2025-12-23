@@ -9,6 +9,9 @@ Rectangle {
     height:  parent.height
     color: "#ffffff"
     
+    signal homebuttonclicked()
+    signal settingbuttonclicked()
+
     Rectangle {
         id: horizontal_line
         width: parent.width
@@ -23,15 +26,24 @@ Rectangle {
         width: parent.width
         height: 90
         color: "#ffffff"
-        // border.color: "#1f1f1f"
-        // border.width: 1
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            text: "XFinder"
-            font.family: "Helvetica"
-            font.pixelSize: 30
-            font.bold: true
+        Row {
+            anchors.centerIn: parent
+            spacing: 12
+
+            Image {
+                source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/rabbit.png"
+                width: 32
+                height: 32
+                fillMode: Image.PreserveAspectFit
+            }
+
+            Text {
+                text: "XFinder"
+                font.family: "Helvetica"
+                font.pixelSize: 30
+                font.bold: true
+                verticalAlignment: Text.AlignVCenter
+            }
         }
     }
 
@@ -55,14 +67,28 @@ Rectangle {
             Layout.preferredWidth: 260
             Layout.preferredHeight: 60
             Layout.alignment: Qt.AlignCenter
-            text: "首页"
+            text: " 首页"
+            font.pixelSize: 20
+            font.family: "Regular"
+            icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/home.png"
+            onClicked: {
+                console.log("首页按钮被点击")
+                sidbar.homebuttonclicked()
+            }
         }
         Button {
             id: setting
             Layout.preferredWidth: 260
             Layout.preferredHeight: 60
             Layout.alignment: Qt.AlignCenter
-            text: "设置"
+            text: " 设置"
+            font.pixelSize: 20
+            font.family: "Regular"
+            icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/setting.png"
+            onClicked: {
+                console.log("设置页按钮被点击")
+                sidbar.settingbuttonclicked()
+            }
         }
     }
 }
