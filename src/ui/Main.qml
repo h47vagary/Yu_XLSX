@@ -9,6 +9,14 @@ Window {
     title: "XFinder"
     
     SideBar {
-        
+        id: sidebar
+
+        onHomebuttonclicked: {
+            console.log("Mani.qml on homebutton clicked")
+        }
+
+        onSettingbuttonclicked: {
+            console.log("Mani.qml on settingbutton clicked")
+        }
     }
 }
