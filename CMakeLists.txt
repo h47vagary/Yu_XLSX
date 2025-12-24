@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 set(CMAKE_PREFIX_PATH "D:/QT6/6.10.1/mingw_64")
-find_package(Qt6 REQUIRED COMPONENTS Quick Quick3D)
+find_package(Qt6 REQUIRED COMPONENTS Quick Quick3D QuickControls2 Qml)
 qt_standard_project_setup(REQUIRES 6.8)
 
 include_directories(
@@ -58,6 +58,8 @@ target_link_libraries(yu_xlsx
     PRIVATE
         Qt6::Quick
         Qt6::Quick3D
+        Qt6::QuickControls2
+        Qt6::Qml
         excel_finder
         xlsx_handle
         configfile

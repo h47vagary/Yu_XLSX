@@ -12,6 +12,8 @@ Rectangle {
     signal homebuttonclicked()
     signal settingbuttonclicked()
 
+    property int selectedIndex: -1  // 当前选中按钮， -1 表示没有
+
     Rectangle {
         id: horizontal_line
         width: parent.width
@@ -67,11 +69,20 @@ Rectangle {
             Layout.preferredWidth: 260
             Layout.preferredHeight: 60
             Layout.alignment: Qt.AlignCenter
-            text: " 首页"
+            spacing: 12
+            text: "首页"
             font.pixelSize: 20
             font.family: "Regular"
+            font.bold: sidbar.selectedIndex === 0 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/home.png"
+            background: Rectangle {
+                color: sidbar.selectedIndex === 0 ? "#d0e8ff":"#ffffff"
+                border.width: 1
+                border.pixelAligned: true
+                radius: 12
+            }
             onClicked: {
+                sidbar.selectedIndex = 0
                 console.log("首页按钮被点击")
                 sidbar.homebuttonclicked()
             }
@@ -81,11 +92,20 @@ Rectangle {
             Layout.preferredWidth: 260
             Layout.preferredHeight: 60
             Layout.alignment: Qt.AlignCenter
-            text: " 设置"
+            spacing: 12
+            text: "设置"
             font.pixelSize: 20
             font.family: "Regular"
+            font.bold: sidbar.selectedIndex === 1 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/setting.png"
+            background: Rectangle {
+                color: sidbar.selectedIndex === 1 ? "#d0e8ff":"#ffffff"
+                border.width: 1
+                border.pixelAligned: true
+                radius: 12
+            }
             onClicked: {
+                sidbar.selectedIndex = 1
                 console.log("设置页按钮被点击")
                 sidbar.settingbuttonclicked()
             }

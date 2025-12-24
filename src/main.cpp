@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlAPplicationEngine>
 #include <QQmlContext>
+#include <QtQuickControls2/QQuickStyle>
 
 #include "excel_finder.h"
 
@@ -29,6 +30,10 @@ public:
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    // 设置非原生风格
+    QQuickStyle::setStyle("Fusion");
+
     FinderBackend backend;
 
     QQmlApplicationEngine engine;
