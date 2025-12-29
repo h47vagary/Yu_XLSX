@@ -13,10 +13,18 @@ Window {
 
         onHomebuttonclicked: {
             console.log("Mani.qml on homebutton clicked")
+            homepage.visible = true;
         }
 
         onSettingbuttonclicked: {
             console.log("Mani.qml on settingbutton clicked")
+            homepage.visible = false;
         }
+    }
+
+    HomePage {
+        id: homepage
+        x: sidebar.width
+        visible: false
     }
 }

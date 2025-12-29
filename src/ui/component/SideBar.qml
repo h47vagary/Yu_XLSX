@@ -76,7 +76,7 @@ Rectangle {
             font.bold: sidbar.selectedIndex === 0 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/home.png"
             background: Rectangle {
-                color: sidbar.selectedIndex === 0 ? "#d0e8ff":"#ffffff"
+                color: sidbar.selectedIndex === 0 ? "#444745ff":"#ffffff"
                 border.width: 1
                 border.pixelAligned: true
                 radius: 12
@@ -99,7 +99,7 @@ Rectangle {
             font.bold: sidbar.selectedIndex === 1 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/setting.png"
             background: Rectangle {
-                color: sidbar.selectedIndex === 1 ? "#d0e8ff":"#ffffff"
+                color: sidbar.selectedIndex === 1 ? "#4a4d4cff":"#ffffff"
                 border.width: 1
                 border.pixelAligned: true
                 radius: 12
