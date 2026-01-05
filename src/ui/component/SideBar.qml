@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Rectangle {
     id: sidbar
     visible: true
-    width: 290
+    width: 140
     height:  parent.height
     color: "#ffffff"
     
@@ -26,7 +26,7 @@ Rectangle {
     Rectangle {
         id: icon_title
         width: parent.width
-        height: 90
+        height: 45
         color: "#ffffff"
         Row {
             anchors.centerIn: parent
@@ -34,15 +34,15 @@ Rectangle {
 
             Image {
                 source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/rabbit.png"
-                width: 32
-                height: 32
+                width: 20
+                height: 20
                 fillMode: Image.PreserveAspectFit
             }
 
             Text {
                 text: "XFinder"
                 font.family: "Helvetica"
-                font.pixelSize: 30
+                font.pixelSize: 20
                 font.bold: true
                 verticalAlignment: Text.AlignVCenter
             }
@@ -66,12 +66,12 @@ Rectangle {
 
         Button {
             id: homepage
-            Layout.preferredWidth: 260
-            Layout.preferredHeight: 60
+            Layout.preferredWidth: 115
+            Layout.preferredHeight: 30
             Layout.alignment: Qt.AlignCenter
             spacing: 12
             text: "首页"
-            font.pixelSize: 20
+            font.pixelSize: 14
             font.family: "Regular"
             font.bold: sidbar.selectedIndex === 0 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/home.png"
@@ -89,12 +89,12 @@ Rectangle {
         }
         Button {
             id: setting
-            Layout.preferredWidth: 260
-            Layout.preferredHeight: 60
+            Layout.preferredWidth: 115
+            Layout.preferredHeight: 30
             Layout.alignment: Qt.AlignCenter
             spacing: 12
             text: "设置"
-            font.pixelSize: 20
+            font.pixelSize: 14
             font.family: "Regular"
             font.bold: sidbar.selectedIndex === 1 ? true : false
             icon.source: "qrc:/qt/qml/YuXlsx/src/ui/resource/icon/setting.png"

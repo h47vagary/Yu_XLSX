@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 Window {
     visible: true
-    width: 1800
-    height: 960
+    width: 800
+    height: 400
     title: "XFinder"
     
     SideBar {
@@ -24,7 +24,7 @@ Window {
 
     HomePage {
         id: homepage
-        x: sidebar.width
+        x: sidebar.width + 1
         visible: false
     }
 }
