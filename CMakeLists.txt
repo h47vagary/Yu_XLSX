@@ -18,6 +18,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/configfile
     ${PROJECT_SOURCE_DIR}/src/xlsx_handle
     ${PROJECT_SOURCE_DIR}/src/utils
+    ${PROJECT_SOURCE_DIR}/src
 )
 
 # =========================
@@ -33,6 +34,7 @@ add_subdirectory(src/utils)
 # =========================
 qt_add_executable(yu_xlsx
     src/main.cpp
+    src/excel_finder_controller.cpp
 )
 
 # ===== QML 模块 =====
