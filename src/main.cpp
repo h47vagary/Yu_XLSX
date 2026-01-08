@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Fusion");
 
     qmlRegisterType<ExcelFinderController>(
-        "App.Excel", 1, 0, "ExcelFinder");
+        "App.Excel", 1, 0, "ExcelFinderController");
 
     QQmlApplicationEngine engine;
     engine.loadFromModule("YuXlsx", "Main");
@@ -20,5 +20,3 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
-
-#include "main.moc"

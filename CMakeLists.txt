@@ -45,7 +45,7 @@ qt_add_qml_module(yu_xlsx
         src/ui/Main.qml
         src/ui/component/SideBar.qml
         src/ui/page/HomePage.qml
-        #ui/page/XXX.qml
+        src/ui/page/ConfigPage.qml
     RESOURCES
         src/ui/resource/icon/home.png
         src/ui/resource/icon/setting.png

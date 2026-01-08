@@ -5,19 +5,28 @@ ExcelFinderController::ExcelFinderController(QObject* parent)
 {
 }
 
-bool ExcelFinderController::init(const QString& source,
-                                 const QString& target)
+void ExcelFinderController::set_source_path(const QString &source_path)
 {
-    finder_ = std::make_unique<ExcelFinder>(
-        source.toStdString(),
-        target.toStdString());
-
-    if (!finder_->init()) {
-        last_error_ = "Excel 文件打开失败";
-        emit lastErrorChanged();
-        return false;
+    if (!finder_) {
+        finder_ = std::make_unique<ExcelFinder>();
     }
-    return true;
+    finder_->set_source_path(source_path.toStdString());
+}
+
+void ExcelFinderController::set_target_path(const QString &target_path)
+{
+    if (!finder_) {
+        finder_ = std::make_unique<ExcelFinder>();
+    }
+    finder_->set_target_path(target_path.toStdString());
+}
+
+Q_INVOKABLE void ExcelFinderController::set_output_path(const QString &output_path)
+{
+    if (!finder_) {
+        finder_ = std::make_unique<ExcelFinder>();
+    }
+    finder_->set_output_path(output_path.toStdString());
 }
 
 bool ExcelFinderController::setTags(const QString& data,
@@ -48,8 +57,8 @@ bool ExcelFinderController::execute()
     return ok;
 }
 
-bool ExcelFinderController::exportResults(const QString& outFile)
+bool ExcelFinderController::exportResults()
 {
     if (!finder_) return false;
-    return finder_->export_results(outFile.toStdString());
+    return finder_->export_results();
 }

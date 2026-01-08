@@ -4,6 +4,12 @@
 
 #define XLSX_FIND_RESULT_FONT_SIZE 11
 
+ExcelFinder::ExcelFinder()
+    : source_file_path(""),
+      target_file_path("")
+{
+}
+
 ExcelFinder::ExcelFinder(const std::string &source_file_path, const std::string &target_file_path)
     : source_file_path(source_file_path),
       target_file_path(target_file_path)
@@ -199,22 +205,25 @@ void ExcelFinder::print_results() const
     std::cout << "======================================================" << std::endl;
 }
 
-bool ExcelFinder::export_results(const std::string& output_file_path_base) 
+bool ExcelFinder::export_results() 
 {
-    std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path_base << "..." << std::endl;
-
-    std::string real_file_path = output_file_path_base;
+    if (output_file_path.empty()) {
+        std::cerr << "[ExcelFinder] 错误: 未指定输出文件路径." << std::endl;
+        return false;
+    }
+    
+    std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path << "..." << std::endl;
     XlsxHandle xlsx_result;
 
     // 1. 判断文件是否存在，若存在则直接打开
-    if (std::filesystem::exists(real_file_path)) {
-        if (!xlsx_result.open_file(real_file_path)) {
+    if (std::filesystem::exists(output_file_path)) {
+        if (!xlsx_result.open_file(output_file_path)) {
             std::cerr << "[ExcelFinder] 打开已存在文件失败!" << std::endl;
             return false;
         }
     } else {
         // 文件不存在则创建
-        if (!xlsx_result.create_file(real_file_path)) {
+        if (!xlsx_result.create_file(output_file_path)) {
             std::cerr << "[ExcelFinder] 创建结果文件失败!" << std::endl;
             return false;
         }
@@ -304,7 +313,7 @@ bool ExcelFinder::export_results(const std::string& output_file_path_base)
     }
 
     // 7. 保存文件
-    if (!xlsx_result.save_file(real_file_path)) {
+    if (!xlsx_result.save_file(output_file_path)) {
         std::cerr << "[ExcelFinder] 保存结果文件失败!" << std::endl;
         xlsx_result.close_file();
         return false;

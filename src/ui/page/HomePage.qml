@@ -9,6 +9,11 @@ Rectangle {
     width: 660
     height: parent.height
 
+    signal source_path_changed(string path)
+    signal finder_path_changed(string path)
+    signal output_dir_changed(string path)
+    signal execute()
+
     //color: "#28d878ff"
     Rectangle
     {
@@ -19,14 +24,23 @@ Rectangle {
         FileDialog {
             id: filedialog
             title: "选择文件"
-            property var targetField
-            nameFilters: [
-                "All files (*)"
-            ]
             fileMode: FileDialog.OpenFile   // 单文件
+            property var targetField
+
             onAccepted: {
                 console.log("选中的文件:", filedialog.selectedFile)
                 targetField.text = filedialog.selectedFile.toString()
+            }
+        }
+
+        FolderDialog {
+            id: dirdialog
+            title: "选择文件路径"
+            property var targetdir
+            
+            onAccepted: {
+                console.log("选中的目录:", selectedFolder)
+                targetdir.text = selectedFolder.toString()
             }
         }
 
@@ -51,6 +65,9 @@ Rectangle {
                 Layout.preferredHeight: 35
                 placeholderText: "请选择数据源路径文件"
                 text: ""
+                onTextChanged: {
+                    homepage.source_path_changed(source_text.text)
+                }
             }
             Button {
                 id: source_button
@@ -62,6 +79,7 @@ Rectangle {
                     filedialog.open()
                 }
             }
+
             Text {
                 Layout.preferredWidth: 75
                 Layout.preferredHeight: 35
@@ -77,6 +95,9 @@ Rectangle {
                 Layout.preferredHeight: 35
                 placeholderText: "请选择待搜索路径文件"
                 text: ""
+                onTextChanged: {
+                    homepage.finder_path_changed(finder_text.text)
+                }
             }
             Button {
                 id: finder_button
@@ -86,6 +107,36 @@ Rectangle {
                     console.log("finder_button 按钮被点击")
                     filedialog.targetField = finder_text
                     filedialog.open()
+                }
+            }
+
+            Text {
+                Layout.preferredWidth: 100
+                Layout.preferredHeight: 35
+                text: "导出文件路径"
+                font.pixelSize: 15
+                font.family: "Regular"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            TextField {
+                id: output_dir_text
+                Layout.preferredWidth: 250
+                Layout.preferredHeight: 35
+                placeholderText: "请选择导出文件路径"
+                text: ""
+                onTextChanged: {
+                    homepage.output_dir_changed(output_dir_text.text)
+                }
+            }
+            Button {
+                id: output_dir_button
+                Layout.preferredWidth: 35
+                Layout.preferredHeight:35
+                onClicked: {
+                    console.log("output_dir_button 按钮被点击")
+                    dirdialog.targetdir  = output_dir_text
+                    dirdialog.open()
                 }
             }
         }
@@ -115,7 +166,7 @@ Rectangle {
 
                     onClicked: {
                         logArea.append("开始转换...")
-                        // 这里以后接 C++ / JS 的转换逻辑
+                        execute()
                     }
                 }
 

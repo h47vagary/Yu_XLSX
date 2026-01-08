@@ -56,6 +56,8 @@ struct SheetResult {
 class ExcelFinder
 {
 public:
+    ExcelFinder();
+
     ExcelFinder(const std::string& source_file_path,
                 const std::string& target_file_path);
     ~ExcelFinder();
@@ -78,20 +80,34 @@ public:
     bool execute();
 
     // 将查找结果导出到新的Excel文件
-    bool export_results(const std::string& output_file_path);
+    bool export_results();
 
     // 在控制台打印查找结果
     void print_results() const;
 
     // 重置结果表（即删除表后重新创建表）
     
-    
+    void set_source_path(const std::string& source_path) {
+        std::cout << "[ExcelFinder] 设置源文件路径: " << source_path << std::endl;
+        source_file_path = source_path;
+    }
 
+    void set_target_path(const std::string& target_path) {
+        std::cout << "[ExcelFinder] 设置目标文件路径: " << target_path << std::endl;
+        target_file_path = target_path;
+    }
+
+    void set_output_path(const std::string& output_path) {
+        std::cout << "[ExcelFinder] 设置输出文件路径: " << output_path << std::endl;
+        output_file_path = output_path;
+    }
+    
 private:
     XlsxHandle source_xlsx_;
     XlsxHandle target_xlsx_;
     std::string source_file_path = ""; 
     std::string target_file_path = ""; 
+    std::string output_file_path = "";
 
     std::string data_tag_;
     std::string car_tag_;
