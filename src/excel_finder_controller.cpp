@@ -1,4 +1,13 @@
 #include "excel_finder_controller.h"
+#include <QUrl>
+
+static std::string urlToLocalPath(const std::string& url)
+{
+    QUrl qurl(QString::fromStdString(url));
+    if (qurl.isLocalFile())
+        return qurl.toLocalFile().toStdString();
+    return url; // 兜底
+}
 
 ExcelFinderController::ExcelFinderController(QObject* parent)
     : QObject(parent)
@@ -10,7 +19,10 @@ void ExcelFinderController::set_source_path(const QString &source_path)
     if (!finder_) {
         finder_ = std::make_unique<ExcelFinder>();
     }
-    finder_->set_source_path(source_path.toStdString());
+    std::string localPath =
+        urlToLocalPath(source_path.toStdString());
+
+    finder_->set_source_path(localPath);
 }
 
 void ExcelFinderController::set_target_path(const QString &target_path)
@@ -18,7 +30,10 @@ void ExcelFinderController::set_target_path(const QString &target_path)
     if (!finder_) {
         finder_ = std::make_unique<ExcelFinder>();
     }
-    finder_->set_target_path(target_path.toStdString());
+
+    std::string localPath = 
+        urlToLocalPath(target_path.toStdString());
+    finder_->set_target_path(localPath);
 }
 
 Q_INVOKABLE void ExcelFinderController::set_output_path(const QString &output_path)
@@ -26,7 +41,10 @@ Q_INVOKABLE void ExcelFinderController::set_output_path(const QString &output_pa
     if (!finder_) {
         finder_ = std::make_unique<ExcelFinder>();
     }
-    finder_->set_output_path(output_path.toStdString());
+    
+    std::string localPath = 
+        urlToLocalPath(output_path.toStdString());
+    finder_->set_output_path(localPath);
 }
 
 bool ExcelFinderController::setTags(const QString& data,

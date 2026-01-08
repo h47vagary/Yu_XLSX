@@ -59,6 +59,9 @@ void ExcelFinder::set_source_read_range(unsigned int start_row,
 bool ExcelFinder::execute()
 {
     std::cout << "[ExcelFinder] 开始执行查找..." << std::endl;
+    if (!init())
+        return false;
+        
     results_.clear();
 
     // 获取源文件的所有工作表
@@ -215,15 +218,16 @@ bool ExcelFinder::export_results()
     std::cout << "[ExcelFinder] 正在导出结果到文件: " << output_file_path << "..." << std::endl;
     XlsxHandle xlsx_result;
 
+    std::string output_file = output_file_path + "/" + "result.xlsx";
     // 1. 判断文件是否存在，若存在则直接打开
-    if (std::filesystem::exists(output_file_path)) {
-        if (!xlsx_result.open_file(output_file_path)) {
+    if (std::filesystem::exists(output_file)) {
+        if (!xlsx_result.open_file(output_file)) {
             std::cerr << "[ExcelFinder] 打开已存在文件失败!" << std::endl;
             return false;
         }
     } else {
         // 文件不存在则创建
-        if (!xlsx_result.create_file(output_file_path)) {
+        if (!xlsx_result.create_file(output_file)) {
             std::cerr << "[ExcelFinder] 创建结果文件失败!" << std::endl;
             return false;
         }
@@ -313,7 +317,7 @@ bool ExcelFinder::export_results()
     }
 
     // 7. 保存文件
-    if (!xlsx_result.save_file(output_file_path)) {
+    if (!xlsx_result.save_file(output_file)) {
         std::cerr << "[ExcelFinder] 保存结果文件失败!" << std::endl;
         xlsx_result.close_file();
         return false;

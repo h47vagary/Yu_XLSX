@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <QGuiApplication>
 #include <QQmlAPplicationEngine>
 #include <QQmlContext>
@@ -6,6 +7,7 @@
 
 int main(int argc, char *argv[])
 {
+    SetConsoleOutputCP(CP_UTF8);
     QGuiApplication app(argc, argv);
 
     // 设置非原生风格

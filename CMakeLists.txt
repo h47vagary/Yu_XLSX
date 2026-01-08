@@ -32,7 +32,7 @@ add_subdirectory(src/utils)
 # =========================
 # 可执行程序
 # =========================
-qt_add_executable(yu_xlsx
+qt_add_executable(yu_xlsx 
     src/main.cpp
     src/excel_finder_controller.cpp
 )
