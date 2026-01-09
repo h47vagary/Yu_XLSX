@@ -25,6 +25,8 @@
 #include <algorithm>
 #include "xlsx_handle.h"
 #include "config_file.h"
+#include "filepath_config.h"
+#include "output_config.h"
 
 /**
  * @brief 存储单行匹配到的最终数据
@@ -90,28 +92,44 @@ public:
     void set_source_path(const std::string& source_path) {
         std::cout << "[ExcelFinder] 设置源文件路径: " << source_path << std::endl;
         source_file_path = source_path;
+        file_path_config_.data_source_file_default_path = source_path;
+        file_path_config_.to_file();
     }
 
     void set_target_path(const std::string& target_path) {
         std::cout << "[ExcelFinder] 设置目标文件路径: " << target_path << std::endl;
         target_file_path = target_path;
+        file_path_config_.search_term_file_default_path = target_path;
+        file_path_config_.to_file();
     }
 
     void set_output_path(const std::string& output_path) {
         std::cout << "[ExcelFinder] 设置输出文件路径: " << output_path << std::endl;
         output_file_path = output_path;
+        file_path_config_.export_file_default_path = output_path;
+        file_path_config_.to_file();
     }
-    
+
+    bool add_price(double min_quantity, double max_quantity, double price_value);
+
+private:
+    struct ColumnIndex {
+        int data_col = -1;
+        int car_col  = -1;
+        int num_col  = -1;
+    };
+
 private:
     XlsxHandle source_xlsx_;
     XlsxHandle target_xlsx_;
-    std::string source_file_path = ""; 
-    std::string target_file_path = ""; 
+    std::string source_file_path = "";
+    std::string target_file_path = "";
     std::string output_file_path = "";
 
-    std::string data_tag_;
-    std::string car_tag_;
-    std::string num_tag_;
+    std::string data_tag_;  // 日期标签
+    std::string car_tag_;   // 车牌标签
+    std::string num_tag_;   // 数量标签
+    std::string price_tag_; // 价格标签
 
     unsigned int read_start_row_ = 2;
     unsigned int read_start_col_ = 1;   // A
@@ -120,12 +138,10 @@ private:
 
     std::vector<SheetResult> results_;
 
-    struct ColumnIndex {
-        int data_col = -1;
-        int car_col  = -1;
-        int num_col  = -1;
-    };
-
+    FilePathConfig file_path_config_;
+    OutputConfig output_config_;
+    
+private:
     bool find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
                                                 const std::string& source_value,
                                                 ValueResult& out_value_result,

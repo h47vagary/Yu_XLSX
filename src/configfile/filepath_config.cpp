@@ -18,15 +18,15 @@ bool FilePathConfig::from_file(const std::string &path, FilePathConfig &file_pat
     return true;
 }
 
-void FilePathConfig::to_file(const std::string &path) const
+void FilePathConfig::to_file() const
 {
     ConfigFile file;
     file.root()["data_source_file_default_path"] = data_source_file_default_path;
     file.root()["search_term_file_default_path"] = search_term_file_default_path;
     file.root()["export_file_default_path"] = export_file_default_path;
 
-    if (!file.save(path))
+    if (!file.save(config_file_path))
     {
-        std::cerr << "Failed to save fileconfig config file: " << path << std::endl;
+        std::cerr << "Failed to save fileconfig config file: " << config_file_path << std::endl;
     }
 }

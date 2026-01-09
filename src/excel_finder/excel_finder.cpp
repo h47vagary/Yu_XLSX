@@ -61,7 +61,7 @@ bool ExcelFinder::execute()
     std::cout << "[ExcelFinder] 开始执行查找..." << std::endl;
     if (!init())
         return false;
-        
+
     results_.clear();
 
     // 获取源文件的所有工作表
@@ -73,7 +73,7 @@ bool ExcelFinder::execute()
     std::cout << "[ExcelFinder] 源文件包含 " << source_sheets.size() << " 个工作表." << std::endl;
     for (auto source_sheet : source_sheets) {
         std::cout << "  - " << source_sheet << std::endl;
-    }   
+    }
 
     // 获取目标文件的第一个工作表
     auto target_sheets = target_xlsx_.get_sheet_names();
@@ -104,9 +104,11 @@ bool ExcelFinder::execute()
     }
     if (col_idx.data_col == -1) {
         std::cerr << "[ExcelFinder]错误：未找到日期列" << data_tag_ << "." << std::endl;
+        return false;
     }
     if (col_idx.num_col == -1) {
         std::cerr << "[ExcelFinder]错误：未找到数量列" << num_tag_ << "." << std::endl;
+        return false;
     }
 
     // 遍历所有源工作表
@@ -207,6 +209,14 @@ void ExcelFinder::print_results() const
     }
     std::cout << "======================================================" << std::endl;
 }
+
+bool ExcelFinder::add_price(double min_quantity,
+                            double max_quantity,
+                            double price_value)
+{
+    return output_config_.add_price(min_quantity, max_quantity, price_value);
+}
+
 
 bool ExcelFinder::export_results() 
 {

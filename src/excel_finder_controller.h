@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "excel_finder.h"
-
 class ExcelFinderController : public QObject
 {
     Q_OBJECT
