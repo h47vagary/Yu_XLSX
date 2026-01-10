@@ -10,6 +10,7 @@
 
 #pragma once
 #include <string>
+#define JSONCPP_DISABLE_STRING_VIEW
 #include "json/json.h"
 
 struct FilePathConfig

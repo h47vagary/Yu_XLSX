@@ -56,39 +56,21 @@ void ExcelFinder::set_source_read_range(unsigned int start_row,
     read_end_col_ = end_col;
 }
 
-bool ExcelFinder::execute()
+bool ExcelFinder::cache_target_sheet(std::string& target_sheet, ColumnIndex& col_idx)
 {
-    std::cout << "[ExcelFinder] 开始执行查找..." << std::endl;
-    if (!init())
-        return false;
-
-    results_.clear();
-
-    // 获取源文件的所有工作表
-    auto source_sheets = source_xlsx_.get_sheet_names();
-    if (source_sheets.empty()) {
-        std::cerr << "[ExcelFinder] 错误: 源文件没有工作表." << std::endl;
-        return false;
-    }
-    std::cout << "[ExcelFinder] 源文件包含 " << source_sheets.size() << " 个工作表." << std::endl;
-    for (auto source_sheet : source_sheets) {
-        std::cout << "  - " << source_sheet << std::endl;
-    }
-
     // 获取目标文件的第一个工作表
     auto target_sheets = target_xlsx_.get_sheet_names();
     if (target_sheets.empty()) {
         std::cerr << "[ExcelFinder] 错误: 目标文件没有工作表." << std::endl;
         return false;
     }
-    const std::string &target_sheet = target_sheets[0];
+    target_sheet = target_sheets[0];
 
     // 预缓存目标表数据，构建索引
     target_xlsx_.cache_sheet_data(target_sheet);
     target_xlsx_.build_index(target_sheet, false);
 
     // 查找目标表列索引
-    ColumnIndex col_idx;
     auto find_col = [&](const std::string& tag)->int {
         auto pos = target_xlsx_.find_cell_by_value_fast(target_sheet, tag, false);
         return pos.empty()? -1 : pos[0].col;
@@ -110,13 +92,40 @@ bool ExcelFinder::execute()
         std::cerr << "[ExcelFinder]错误：未找到数量列" << num_tag_ << "." << std::endl;
         return false;
     }
+    return true;
+}
+bool ExcelFinder::execute()
+{
+    std::cout << "[ExcelFinder] 开始执行查找..." << std::endl;
+    if (!init())
+        return false;
+
+    // 缓存目标文件工作表
+    std::string target_sheet;
+    ColumnIndex col_idx;
+    if (!cache_target_sheet(target_sheet, col_idx))
+        return false;
+
+    // 获取源文件的所有工作表
+    auto source_sheets = source_xlsx_.get_sheet_names();
+    if (source_sheets.empty()) {
+        std::cerr << "[ExcelFinder] 错误: 源文件没有工作表." << std::endl;
+        return false;
+    }
+    std::cout << "[ExcelFinder] 源文件包含 " << source_sheets.size() << " 个工作表." << std::endl;
+    for (auto source_sheet : source_sheets) {
+        std::cout << "  - " << source_sheet << std::endl;
+    }
+
 
     // 遍历所有源工作表
+    results_.clear();
     for (const auto& sheet_name : source_sheets) {
+        double sheet_total_cost = 0.0;
         SheetResult sheet_result;
-        sheet_result.sheet_name = sheet_name;
+        sheet_result.sheet_name = sheet_name;   // 子表名称
         // 读取名称
-        sheet_result.group_name = source_xlsx_.read_cell(sheet_name, 1, 2); // 读取B1单元格
+        sheet_result.group_name = source_xlsx_.read_cell(sheet_name, 1, 2); // 读取B1单元格(姓名)
         // 从源工作表读取数据
         auto source_values = source_xlsx_.read_range(sheet_name, read_start_row_, read_start_col_, read_end_row_, read_end_col_, false);
         if (source_values.empty()) {
@@ -136,14 +145,13 @@ bool ExcelFinder::execute()
             value_result.source_value = source_value;
 
             // 单个 source_value 调用
-            find_and_extract_data_from_target_fast(target_sheet, source_value, value_result, col_idx);
+            find_and_extract_data_from_target_fast(target_sheet, col_idx, value_result, sheet_total_cost);
             
             if (!value_result.found_records.empty()) {
                 sheet_result.value_results.push_back(value_result);
             }
-                
         }
-
+        sheet_result.count_cost = std::to_string(sheet_total_cost);
         results_.push_back(sheet_result);
     }
 
@@ -152,26 +160,33 @@ bool ExcelFinder::execute()
 }
 
 bool ExcelFinder::find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
-                                                         const std::string& source_value,
+                                                         const ColumnIndex& col_idx,
                                                          ValueResult& out_value_result,
-                                                         const ColumnIndex& col_idx)
+                                                         double &sheet_total_cost)
 {
-    auto positions = target_xlsx_.find_cell_by_value_fast(target_sheet_name, source_value, false);
+    auto positions = target_xlsx_.find_cell_by_value_fast(target_sheet_name, out_value_result.source_value, false);
     if (positions.empty()) {
-        std::cout << "can't find value: " << source_value << " int sheet name: " << target_sheet_name << std::endl;
+        std::cout << "can't find value: " << out_value_result.source_value << " int sheet name: " << target_sheet_name << std::endl;
         return false;
     }
 
     const auto& table = target_xlsx_.get_sheet_cache(target_sheet_name);
-
+    
     for (const auto& pos : positions) {
         FoundRecord record;
         if (col_idx.data_col != -1) record.data_time  = table[pos.row-1][col_idx.data_col-1];
         if (col_idx.car_col  != -1) record.car_number = table[pos.row-1][col_idx.car_col-1];
         if (col_idx.num_col  != -1) record.quantity   = table[pos.row-1][col_idx.num_col-1];
+        price price_value = 1.0;
+        query_price(std::stod(record.quantity), price_value);
+        record.price = std::to_string(price_value);
+        double value_total_cost = price_value * std::stoi(record.quantity);
+        record.total_cost = std::to_string(value_total_cost);
+        sheet_total_cost += value_total_cost;
 
         std::cout << "[sheet_name]: " << target_sheet_name << " found " << "[data_time]: " << record.data_time 
-                    << " [car_number]: " << record.car_number << " [quantity]: " << record.quantity << std::endl;
+                    << " [car_number]: " << record.car_number << " [quantity]: " << record.quantity 
+                    << " [price]: " << record.price << " [value_total_cost]: " << record.total_cost << std::endl;
         date_simplify(record.data_time);
         out_value_result.found_records.push_back(record);
     }
@@ -185,7 +200,6 @@ void ExcelFinder::date_simplify(std::string &date_str)
         date_str = date_str.substr(0, 10);
     }
 }
-
 
 void ExcelFinder::print_results() const
 {
@@ -214,9 +228,42 @@ bool ExcelFinder::add_price(double min_quantity,
                             double max_quantity,
                             double price_value)
 {
-    return output_config_.add_price(min_quantity, max_quantity, price_value);
+    QuantityRange new_range{min_quantity, max_quantity};
+
+    // 区间重叠校验
+    for (const auto& [range, _] : price_map_)
+    {
+        bool overlap =
+            !(max_quantity <= range.min_quantity ||
+              min_quantity >= range.max_quantity);
+
+        if (overlap)
+            return false;
+    }
+
+    auto [it, inserted] = price_map_.emplace(new_range, price_value);
+    return inserted;
 }
 
+bool ExcelFinder::remove_price(double min, double max)
+{
+    QuantityRange range{min, max};
+    return price_map_.erase(range) > 0;
+}
+
+bool ExcelFinder::query_price(double quantity, price &out_price) const
+{
+    for (const auto& [range, price] : price_map_)
+    {
+        if (quantity >= range.min_quantity &&
+            quantity <  range.max_quantity)
+        {
+            out_price = price;
+            return true;
+        }
+    }
+    return false;
+}
 
 bool ExcelFinder::export_results() 
 {
@@ -268,7 +315,9 @@ bool ExcelFinder::export_results()
     xlsx_result.write_cell(result_sheet, 1, 3, "日期");
     xlsx_result.write_cell(result_sheet, 1, 4, "车牌号码");
     xlsx_result.write_cell(result_sheet, 1, 5, "数量");
-    for (int col = 1; col <= 5; ++col) {
+    xlsx_result.write_cell(result_sheet, 1, 6, "单价");
+    xlsx_result.write_cell(result_sheet, 1, 7, "金额");
+    for (int col = 1; col <= 7; ++col) {
         xlsx_result.set_font_size(result_sheet, 1, col, XLSX_FIND_RESULT_FONT_SIZE);
     }
 
@@ -310,17 +359,23 @@ bool ExcelFinder::export_results()
                 xlsx_result.write_cell(result_sheet, current_row, 2, sheet_result.find_values[i]);
                 xlsx_result.set_font_size(result_sheet, current_row, 2, XLSX_FIND_RESULT_FONT_SIZE);
 
-            // 日期、车牌、数量
+            // 日期、车牌、数量、单价、金额
             if (i < record_count) {
                 xlsx_result.write_cell(result_sheet, current_row, 3, block_records[i].data_time);
                 xlsx_result.write_cell(result_sheet, current_row, 4, block_records[i].car_number);
                 xlsx_result.write_cell(result_sheet, current_row, 5, block_records[i].quantity);
+                xlsx_result.write_cell(result_sheet, current_row, 6, block_records[i].price);
+                xlsx_result.write_cell(result_sheet, current_row, 7, block_records[i].total_cost);
                 xlsx_result.set_font_size(result_sheet, current_row, 3, XLSX_FIND_RESULT_FONT_SIZE);
                 xlsx_result.set_font_size(result_sheet, current_row, 4, XLSX_FIND_RESULT_FONT_SIZE);
                 xlsx_result.set_font_size(result_sheet, current_row, 5, XLSX_FIND_RESULT_FONT_SIZE);
+                xlsx_result.set_font_size(result_sheet, current_row, 6, XLSX_FIND_RESULT_FONT_SIZE);
+                xlsx_result.set_font_size(result_sheet, current_row, 7, XLSX_FIND_RESULT_FONT_SIZE);
             }
             current_row++;
         }
+        xlsx_result.write_cell(result_sheet, current_row, 7, sheet_result.count_cost);
+        xlsx_result.set_font_size(result_sheet, current_row, 7, XLSX_FIND_RESULT_FONT_SIZE);
 
         // 空行分隔不同工作表的结果
         current_row += 2;

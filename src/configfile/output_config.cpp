@@ -12,7 +12,7 @@ bool OutputConfig::from_file(const std::string &path, OutputConfig &output_confi
     }
 
     Json::Value root = file.root();
-    if (!root.isMember("prices") || !root["prices"].isArray())
+    if (!root.isMember(std::string("prices")) || !root[std::string("prices")].isArray())
     {
         std::cerr << "Invalid output config format" << std::endl;
         return false;
@@ -20,16 +20,18 @@ bool OutputConfig::from_file(const std::string &path, OutputConfig &output_confi
 
     output_config.price_map.clear();
 
-    for (const auto& item : root["prices"])
+    for (const auto& item : root[std::string("prices")])
     {
-        if (!item.isMember("min") || !item.isMember("max") || !item.isMember("price"))
+        if (!item.isMember(std::string("min")) ||
+            !item.isMember(std::string("max")) ||
+            !item.isMember(std::string("price")))
             continue;
 
         OutputConfig::QuantityRange range;
-        range.min_quantity = item["min"].asDouble();
-        range.max_quantity = item["max"].asDouble();
+        range.min_quantity = item[std::string("min")].asDouble();
+        range.max_quantity = item[std::string("max")].asDouble();
 
-        double price = item["price"].asDouble();
+        double price = item[std::string("price")].asDouble();
 
         output_config.price_map.emplace(range, price);
     }
@@ -46,19 +48,23 @@ void OutputConfig::to_file() const
     for (const auto& [range, price] : price_map)
     {
         Json::Value item;
-        item["min"] = range.min_quantity;
-        item["max"] = range.max_quantity;
-        item["price"] = price;
+        item[std::string("min")]   = range.min_quantity;
+        item[std::string("max")]   = range.max_quantity;
+        item[std::string("price")] = price;
         prices.append(item);
     }
 
-    root["prices"] = prices;
+    root[std::string("prices")] = prices;
     file.root() = root;
 
     if (!file.save(config_file_path))
     {
         std::cerr << "Failed to save output config file: " << config_file_path << std::endl;
     }
+}
+
+OutputConfig::OutputConfig()
+{
 }
 
 bool OutputConfig::add_price(double min, double max, price value)

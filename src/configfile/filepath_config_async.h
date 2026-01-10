@@ -43,7 +43,7 @@ public:
         TaskExecutor::run([=]() 
         {
             try {
-                config_ptr->to_file(path);
+                config_ptr->to_file();
                 if (on_success) on_success();
             } catch (...) {
                 if (on_fail) on_fail();

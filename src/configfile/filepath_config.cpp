@@ -21,9 +21,9 @@ bool FilePathConfig::from_file(const std::string &path, FilePathConfig &file_pat
 void FilePathConfig::to_file() const
 {
     ConfigFile file;
-    file.root()["data_source_file_default_path"] = data_source_file_default_path;
-    file.root()["search_term_file_default_path"] = search_term_file_default_path;
-    file.root()["export_file_default_path"] = export_file_default_path;
+    file.root()[std::string("data_source_file_default_path")] = data_source_file_default_path;
+    file.root()[std::string("search_term_file_default_path")] = search_term_file_default_path;
+    file.root()[std::string("export_file_default_path")] = export_file_default_path;
 
     if (!file.save(config_file_path))
     {

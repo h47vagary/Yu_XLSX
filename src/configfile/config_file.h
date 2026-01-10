@@ -18,6 +18,7 @@
 #ifdef _WIN32
 #include <direct.h>    // Windows mkdir
 #endif
+#define JSONCPP_DISABLE_STRING_VIEW
 #include "json/json.h"
 
 #define D_CONFIG_BASE_PATH                      "./config"

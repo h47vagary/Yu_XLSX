@@ -22,11 +22,10 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <algorithm>
 #include "xlsx_handle.h"
-#include "config_file.h"
-#include "filepath_config.h"
-#include "output_config.h"
+
 
 /**
  * @brief 存储单行匹配到的最终数据
@@ -35,6 +34,8 @@ struct FoundRecord {
     std::string data_time;   // 消费时间
     std::string car_number;  // 车牌号码
     std::string quantity;    // 数量
+    std::string price;       // 单价
+    std::string total_cost;  // 总价
 };
 
 /**
@@ -48,6 +49,7 @@ struct ValueResult {
 struct SheetResult {
     std::string sheet_name;                 // 源工作表名称
     std::string group_name;                 // 名称
+    std::string count_cost;                 // 该表对应的总金额 
     std::vector<ValueResult> value_results; // 每个源值对应的所有匹配记录
     std::vector<std::string> find_values;   // 该表中所有需要查找的值
 };
@@ -57,6 +59,29 @@ struct SheetResult {
  */
 class ExcelFinder
 {
+private:
+    struct ColumnIndex {
+        int data_col = -1;
+        int car_col  = -1;
+        int num_col  = -1;
+    };
+
+    struct QuantityRange
+    {
+        double min_quantity = 0.0;
+        double max_quantity = 0.0;
+
+        bool operator<(const QuantityRange& other) const
+        {
+            if (min_quantity != other.min_quantity)
+                return min_quantity < other.min_quantity;
+            return max_quantity < other.max_quantity;
+        }
+    };
+
+    using price = double;
+    using PriceMap = std::map<QuantityRange, price>;
+
 public:
     ExcelFinder();
 
@@ -92,32 +117,21 @@ public:
     void set_source_path(const std::string& source_path) {
         std::cout << "[ExcelFinder] 设置源文件路径: " << source_path << std::endl;
         source_file_path = source_path;
-        file_path_config_.data_source_file_default_path = source_path;
-        file_path_config_.to_file();
     }
 
     void set_target_path(const std::string& target_path) {
         std::cout << "[ExcelFinder] 设置目标文件路径: " << target_path << std::endl;
         target_file_path = target_path;
-        file_path_config_.search_term_file_default_path = target_path;
-        file_path_config_.to_file();
     }
 
     void set_output_path(const std::string& output_path) {
         std::cout << "[ExcelFinder] 设置输出文件路径: " << output_path << std::endl;
         output_file_path = output_path;
-        file_path_config_.export_file_default_path = output_path;
-        file_path_config_.to_file();
     }
 
     bool add_price(double min_quantity, double max_quantity, double price_value);
-
-private:
-    struct ColumnIndex {
-        int data_col = -1;
-        int car_col  = -1;
-        int num_col  = -1;
-    };
+    bool remove_price(double min, double max);
+    bool query_price(double quantity, price& out_price) const;
 
 private:
     XlsxHandle source_xlsx_;
@@ -138,16 +152,17 @@ private:
 
     std::vector<SheetResult> results_;
 
-    FilePathConfig file_path_config_;
-    OutputConfig output_config_;
-    
+    PriceMap price_map_;
+
 private:
     bool find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
-                                                const std::string& source_value,
+                                                const ColumnIndex& col_idx,
                                                 ValueResult& out_value_result,
-                                                const ColumnIndex& col_idx);
+                                                double &sheet_total_cost);
 
     void date_simplify(std::string& date_str);
 
+    // 缓存目标表文件
+    bool cache_target_sheet(std::string& target_sheet, ColumnIndex& col_idx);
 };
 

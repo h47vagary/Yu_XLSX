@@ -11,6 +11,7 @@
 #pragma once
 #include <string>
 #include <map>
+#define JSONCPP_DISABLE_STRING_VIEW
 #include "json/json.h"
 
 struct OutputConfig
