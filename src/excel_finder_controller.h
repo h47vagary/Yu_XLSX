@@ -32,6 +32,8 @@ public:
 
     Q_INVOKABLE bool exportResults();
 
+    Q_INVOKABLE bool setPriceRules(const QVariantList &price_rules);
+
     bool busy() const { return busy_; }
 
 signals:

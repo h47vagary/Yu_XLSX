@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <QGuiApplication>
-#include <QQmlAPplicationEngine>
+#include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QtQuickControls2/QQuickStyle>
 #include "excel_finder_controller.h"

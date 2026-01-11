@@ -17,18 +17,6 @@ Window {
         }
     }
 
-    // Button {
-    //     text: "开始查找"
-    //     onClicked: {
-    //         finder.init(
-    //             "E:\\Code\\Yu_XLSX\\doc\\new\\福邦1.xlsx",
-    //             "E:\\Code\\Yu_XLSX\\doc\\new\\福邦14-16交易详情255.xlsx"
-    //         )
-    //         finder.setTags("消费时间", "车牌号码", "数量")
-    //         finder.execute()
-    //     }
-    // }
-
     SideBar {
         id: sidebar
 

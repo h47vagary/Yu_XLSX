@@ -26,7 +26,6 @@
 #include <algorithm>
 #include "xlsx_handle.h"
 
-
 /**
  * @brief 存储单行匹配到的最终数据
  */
@@ -131,6 +130,9 @@ public:
 
     bool add_price(double min_quantity, double max_quantity, double price_value);
     bool remove_price(double min, double max);
+    void clear_price() {
+        price_map_.clear();
+    }
     bool query_price(double quantity, price& out_price) const;
 
 private:
@@ -153,7 +155,6 @@ private:
     std::vector<SheetResult> results_;
 
     PriceMap price_map_;
-
 private:
     bool find_and_extract_data_from_target_fast(const std::string& target_sheet_name,
                                                 const ColumnIndex& col_idx,

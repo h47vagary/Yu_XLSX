@@ -1,18 +1,26 @@
 #include "output_config.h"
+
 #include <iostream>
 #include "config_file.h"
 
-bool OutputConfig::from_file(const std::string &path, OutputConfig &output_config)
+OutputConfig::OutputConfig()
+{
+}
+
+bool OutputConfig::from_file(const std::string& path,
+                             OutputConfig& output_config)
 {
     ConfigFile file;
     if (!file.load(path))
     {
-        std::cerr << "Failed to load output config file: " << path << std::endl;
+        std::cerr << "Failed to load output config file: "
+                  << path << std::endl;
         return false;
     }
 
-    Json::Value root = file.root();
-    if (!root.isMember(std::string("prices")) || !root[std::string("prices")].isArray())
+    const Json::Value& root = file.root();
+
+    if (!root.isMember("prices") || !root["prices"].isArray())
     {
         std::cerr << "Invalid output config format" << std::endl;
         return false;
@@ -20,20 +28,20 @@ bool OutputConfig::from_file(const std::string &path, OutputConfig &output_confi
 
     output_config.price_map.clear();
 
-    for (const auto& item : root[std::string("prices")])
+    for (const Json::Value& item : root["prices"])
     {
-        if (!item.isMember(std::string("min")) ||
-            !item.isMember(std::string("max")) ||
-            !item.isMember(std::string("price")))
+        if (!item.isMember("min") ||
+            !item.isMember("max") ||
+            !item.isMember("price"))
             continue;
 
-        OutputConfig::QuantityRange range;
-        range.min_quantity = item[std::string("min")].asDouble();
-        range.max_quantity = item[std::string("max")].asDouble();
+        QuantityRange range;
+        range.min_quantity = item["min"].asDouble();
+        range.max_quantity = item["max"].asDouble();
 
-        double price = item[std::string("price")].asDouble();
+        double p = item["price"].asDouble();
 
-        output_config.price_map.emplace(range, price);
+        output_config.price_map.emplace(range, p);
     }
 
     return true;
@@ -42,29 +50,27 @@ bool OutputConfig::from_file(const std::string &path, OutputConfig &output_confi
 void OutputConfig::to_file() const
 {
     ConfigFile file;
-    Json::Value root;
+    Json::Value root(Json::objectValue);
     Json::Value prices(Json::arrayValue);
 
-    for (const auto& [range, price] : price_map)
+    for (const auto& [range, p] : price_map)
     {
-        Json::Value item;
-        item[std::string("min")]   = range.min_quantity;
-        item[std::string("max")]   = range.max_quantity;
-        item[std::string("price")] = price;
+        Json::Value item(Json::objectValue);
+        item["min"]   = range.min_quantity;
+        item["max"]   = range.max_quantity;
+        item["price"] = p;
+
         prices.append(item);
     }
 
-    root[std::string("prices")] = prices;
+    root["prices"] = prices;
     file.root() = root;
 
     if (!file.save(config_file_path))
     {
-        std::cerr << "Failed to save output config file: " << config_file_path << std::endl;
+        std::cerr << "Failed to save output config file: "
+                  << config_file_path << std::endl;
     }
-}
-
-OutputConfig::OutputConfig()
-{
 }
 
 bool OutputConfig::add_price(double min, double max, price value)
@@ -97,12 +103,12 @@ bool OutputConfig::remove_price(double min, double max)
 
 bool OutputConfig::query_price(double quantity, price& out_price) const
 {
-    for (const auto& [range, price] : price_map)
+    for (const auto& [range, p] : price_map)
     {
         if (quantity >= range.min_quantity &&
             quantity <  range.max_quantity)
         {
-            out_price = price;
+            out_price = p;
             return true;
         }
     }

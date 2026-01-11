@@ -228,6 +228,8 @@ bool ExcelFinder::add_price(double min_quantity,
                             double max_quantity,
                             double price_value)
 {
+    std::cout << "[ExcelFinder] add quantity range: [" << min_quantity << ", " << max_quantity
+              << ") -> " << price_value << std::endl;
     QuantityRange new_range{min_quantity, max_quantity};
 
     // 区间重叠校验
@@ -242,6 +244,14 @@ bool ExcelFinder::add_price(double min_quantity,
     }
 
     auto [it, inserted] = price_map_.emplace(new_range, price_value);
+    if (inserted)
+    {
+        std::cout << "[ExcelFinder] add price success." << std::endl;
+    }
+    else
+    {
+        std::cout << "[ExcelFinder] add price failed: already exists same range." << std::endl;
+    }
     return inserted;
 }
 

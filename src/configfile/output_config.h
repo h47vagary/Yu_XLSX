@@ -1,18 +1,11 @@
-/**
- * @file output_config.h
- * @brief 导出配置的配置文件
- * @version 0.1
- * @date 2026-01-09
- * 
- * @copyright Copyright (c) 2026
- * 
- */
-
 #pragma once
+
 #include <string>
 #include <map>
+
+// 必须在 jsoncpp 头之前
 #define JSONCPP_DISABLE_STRING_VIEW
-#include "json/json.h"
+#include <json/json.h>
 
 struct OutputConfig
 {
@@ -44,6 +37,7 @@ struct OutputConfig
     void clear();
 
     // === 持久化 ===
-    static bool from_file(const std::string& path, OutputConfig& output_config);
+    static bool from_file(const std::string& path,
+                          OutputConfig& output_config);
     void to_file() const;
 };
