@@ -1,6 +1,7 @@
 add_library(configfile STATIC
-                        config_manager.cpp
-            )
+                        config_file.cpp
+                        filepath_config.cpp
+                        output_config.cpp)
 
 target_include_directories(configfile PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -9,5 +10,5 @@ target_include_directories(configfile PUBLIC
 
 # 链接 
 target_link_libraries(configfile
-    # utils
+    utils
 )
