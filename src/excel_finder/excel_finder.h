@@ -58,7 +58,7 @@ struct SheetResult {
  */
 class ExcelFinder
 {
-private:
+public:
     struct ColumnIndex {
         int data_col = -1;
         int car_col  = -1;
@@ -117,15 +117,24 @@ public:
         std::cout << "[ExcelFinder] 设置源文件路径: " << source_path << std::endl;
         source_file_path = source_path;
     }
+    std::string get_source_path() const {
+        return source_file_path;
+    }
 
     void set_target_path(const std::string& target_path) {
         std::cout << "[ExcelFinder] 设置目标文件路径: " << target_path << std::endl;
         target_file_path = target_path;
     }
+    std::string get_target_path() const {
+        return target_file_path;
+    }
 
     void set_output_path(const std::string& output_path) {
         std::cout << "[ExcelFinder] 设置输出文件路径: " << output_path << std::endl;
         output_file_path = output_path;
+    }
+    std::string get_output_path() const {
+        return output_file_path;
     }
 
     bool add_price(double min_quantity, double max_quantity, double price_value);
@@ -134,6 +143,9 @@ public:
         price_map_.clear();
     }
     bool query_price(double quantity, price& out_price) const;
+    std::map<QuantityRange, price> get_price_map() const {
+        return price_map_;
+    }
 
 private:
     XlsxHandle source_xlsx_;

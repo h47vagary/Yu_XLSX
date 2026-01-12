@@ -14,6 +14,18 @@ Rectangle {
     signal output_dir_changed(string path)
     signal execute()
 
+    Component.onCompleted: {
+        source_text.text     = finder.sourcePath()
+        finder_text.text     = finder.targetPath()
+        output_dir_text.text = finder.outputPath()
+
+        console.log("HomePage init paths:",
+                    source_text.text,
+                    finder_text.text,
+                    output_dir_text.text)
+    }
+
+
     //color: "#28d878ff"
     Rectangle
     {

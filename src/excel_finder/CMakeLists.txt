@@ -4,7 +4,8 @@ endif()
 
 
 add_library(excel_finder STATIC 
-                        excel_finder.cpp)
+                        excel_finder.cpp
+                        excel_finder_config_handler.cpp)
 
 target_include_directories(excel_finder PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

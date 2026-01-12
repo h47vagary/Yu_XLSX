@@ -8,6 +8,32 @@ Rectangle {
     height: parent.height
     color: "#f6f6f6"
 
+    function reloadPriceRules() {
+        priceModel.clear()
+
+        const rules = finder.priceRules()
+        console.log("load price rules:", rules.length)
+
+        for (let i = 0; i < rules.length; ++i) {
+            priceModel.append({
+                min:   Number(rules[i].min),
+                max:   Number(rules[i].max),
+                price: Number(rules[i].price)
+            })
+        }
+    }
+
+
+    Component.onCompleted: reloadPriceRules()
+
+    Connections {
+        target: finder
+        function onPriceRulesChanged() {
+            reloadPriceRules()
+        }
+    }
+
+
     ListModel {
         id: priceModel
     }
@@ -47,21 +73,27 @@ Rectangle {
                     text: min
                     Layout.preferredWidth: 100
                     inputMethodHints: Qt.ImhDigitsOnly
-                    onTextChanged: priceModel.setProperty(index, "min", Number(text))
+                    onEditingFinished: {
+                        priceModel.setProperty(index, "min", Number(text))
+                    }
                 }
 
                 TextField {
                     text: max
                     Layout.preferredWidth: 100
                     inputMethodHints: Qt.ImhDigitsOnly
-                    onTextChanged: priceModel.setProperty(index, "max", Number(text))
+                    onEditingFinished: {
+                        priceModel.setProperty(index, "max", Number(text))
+                    }
                 }
 
                 TextField {
                     text: price
                     Layout.preferredWidth: 100
                     inputMethodHints: Qt.ImhFormattedNumbersOnly
-                    onTextChanged: priceModel.setProperty(index, "price", Number(text))
+                    onEditingFinished: {
+                        priceModel.setProperty(index, "price", Number(text))
+                    }
                 }
 
                 Button {

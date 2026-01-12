@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_ON ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_PREFIX_PATH "D:/QT6/6.10.1/mingw_64")
 find_package(Qt6 REQUIRED COMPONENTS
@@ -78,8 +78,8 @@ target_link_libraries(yu_xlsx
         ${OPENXLSX_NOWIDE_LIB}
 )
 
-if (MINGW AND CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_custom_command(TARGET yu_xlsx POST_BUILD
-        COMMAND ${CMAKE_STRIP} $<TARGET_FILE:yu_xlsx>
-    )
-endif()
+# if (MINGW AND CMAKE_BUILD_TYPE STREQUAL "Release")
+#     add_custom_command(TARGET yu_xlsx POST_BUILD
+#         COMMAND ${CMAKE_STRIP} $<TARGET_FILE:yu_xlsx>
+#     )
+# endif()

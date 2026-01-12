@@ -19,5 +19,5 @@ public:
     virtual nlohmann::json dump_config() const = 0;
 
     // 加载配置
-    virtual void load_config(const Json::Value& cfg) = 0;
+    virtual void load_config(const nlohmann::json &cfg) = 0;
 };
